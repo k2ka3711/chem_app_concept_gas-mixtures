@@ -22,6 +22,7 @@
       --gas-b-bg: #fff7ed;
       --gas-b-border: #fed7aa;
       --total: #7c3aed;         /* 全圧/混合: 紫 */
+      --gas-single: #475569;    /* ステップ5の1種類の気体: スレート */
       --total-bg: #f5f3ff;
       --accent-p: #ef4444;       /* 圧力: 赤 */
       --accent-v: #0284c7;       /* 体積: 空色 */
@@ -268,6 +269,10 @@
       border-left: 4px solid var(--total);
       background: var(--total-bg);
     }
+    .meter-card.meter-single {
+      border-left: 4px solid var(--gas-single);
+      background: #f8fafc;
+    }
 
     .meter-header {
       display: flex;
@@ -307,6 +312,7 @@
     .val-a { color: var(--gas-a); }
     .val-b { color: var(--gas-b); }
     .val-total { color: var(--total); }
+    .val-single { color: var(--gas-single); }
 
     .meter-unit {
       font-size: 12px;
@@ -380,7 +386,8 @@
       font-size: 14px;
       line-height: 1.7;
     }
-    .insight-box strong {
+    /* 見出し（先頭の strong）だけをブロック表示にし、文中の強調は改行させない */
+    .insight-box > strong:first-child {
       display: block;
       color: var(--primary);
       font-size: 15px;
@@ -456,6 +463,12 @@
     .control-label span.c-a { color: var(--gas-a); }
     .control-label span.c-b { color: var(--gas-b); }
     .control-label span.c-t { color: var(--accent-t); }
+    .model-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.6;
+    }
     input[type="range"] {
       width: 100%;
       height: 6px;
@@ -501,6 +514,68 @@
       background: #f1f5f9;
       color: var(--ink);
     }
+
+    /* 予想 → 観察 → 説明（実験③・ステップ5） */
+    .predict-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .predict-title {
+      display: block;
+      color: #b45309;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .predict-q {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+    .predict-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .predict-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .predict-btn:hover:not(:disabled) { background: #f1f5f9; }
+    .predict-btn.selected { border-color: #f59e0b; background: #fef3c7; }
+    .predict-btn.correct { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+    .predict-btn.wrong { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+    .predict-btn.correct::after { content: ' ✓ 正解'; }
+    .predict-btn.wrong::after { content: ' ✗ あなたの予想'; }
+    .predict-check {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      background: white;
+      border: 1.5px solid #f59e0b;
+      border-radius: 999px;
+      color: #b45309;
+      cursor: pointer;
+    }
+    .predict-check.show { display: inline-block; }
+    .predict-result {
+      font-size: 13px;
+      margin-top: 10px;
+      line-height: 1.7;
+    }
+    .predict-result:empty { display: none; }
 
     /* ステップ3の公式ボード */
     .formula-board {
@@ -630,6 +705,15 @@
       border-color: #ef4444;
       color: #991b1b;
     }
+    /* 正誤を色だけでなく記号と文字でも示す */
+    .quiz-btn.correct::after,
+    .quiz-btn.wrong::after {
+      float: right;
+      margin-left: 12px;
+      font-weight: 800;
+    }
+    .quiz-btn.correct::after { content: '✓ 正解'; }
+    .quiz-btn.wrong::after { content: '✗ あなたの解答'; }
     .quiz-feedback {
       margin-top: 14px;
       padding: 12px 16px;
@@ -640,6 +724,20 @@
     }
     .quiz-feedback.show { display: block; }
     .fb-ok { background: #d1fae5; color: #065f46; }
+    .quiz-retry {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .quiz-retry:hover { background: #f1f5f9; color: var(--ink); }
+    .quiz-retry.show { display: inline-block; }
     .fb-ng { background: #fee2e2; color: #991b1b; }
 
     /* ナビゲーションバー（次へ・戻る） */
@@ -749,7 +847,7 @@
           <span>👀</span> 気体Aと気体Bが同居する世界
         </h2>
         <p class="card-desc">
-          ひとつの容器に、青い気体（気体A）と赤い気体（気体B）が入っています。<br>
+          ひとつの容器に、青色の気体（気体A）と赤橙色の気体（気体B）が入っています。<br>
           下の切り替えボタンを押して、それぞれの気体が壁を押す「手ごたえ（分圧）」を観察してみましょう。
         </p>
 
@@ -765,7 +863,7 @@
               </div>
               <div class="meter-value-row">
                 <span class="meter-val val-a" id="step1-pa-val">0.60</span>
-                <span class="meter-unit">atm</span>
+                <span class="meter-unit">×10⁵ Pa</span>
               </div>
             </div>
 
@@ -775,7 +873,7 @@
               </div>
               <div class="meter-value-row">
                 <span class="meter-val val-b" id="step1-pb-val">0.40</span>
-                <span class="meter-unit">atm</span>
+                <span class="meter-unit">×10⁵ Pa</span>
               </div>
             </div>
 
@@ -785,7 +883,7 @@
               </div>
               <div class="meter-value-row">
                 <span class="meter-val val-total" id="step1-ptot-val">1.00</span>
-                <span class="meter-unit">atm</span>
+                <span class="meter-unit">×10⁵ Pa</span>
               </div>
               <div class="stacked-bar-container">
                 <div class="stacked-bar">
@@ -800,14 +898,14 @@
         <div class="filter-btn-group">
           <button class="filter-btn active" data-view="both">👥 2つの気体を同時に見る</button>
           <button class="filter-btn" data-view="only-a">🔵 気体Aだけに注目</button>
-          <button class="filter-btn" data-view="only-b">🔴 気体Bだけに注目</button>
+          <button class="filter-btn" data-view="only-b">🟠 気体Bだけに注目</button>
         </div>
 
         <div class="insight-box">
           <strong>💡 ここがポイント！「相手はお互い見えていない！？」</strong>
-          理想気体の分子はとても小さく、お互いに力を及ぼし合いません。<br>
+          理想気体では、分子自身の体積がなく、分子間力もはたらかないと考えます。<br>
           そのため、気体Aの分子は<strong>「気体Bがいないかのように」</strong>容器全体を自由に飛び回り、壁にぶつかって圧力を生み出します。<br>
-          この<strong>「その気体だけで容器を満たしたときに示す圧力」</strong>のことを、その成分気体の<strong>「分圧」</strong>と呼びます。
+          このように、成分気体が<strong>「混合気体と同じ温度で、混合気体の全体積を単独で占めたときに示す圧力」</strong>を、その成分気体の<strong>「分圧」</strong>と呼びます。
         </div>
 
         <div class="step-nav-bar">
@@ -854,21 +952,21 @@
                 <div class="meter-header"><span class="meter-title">気体Aの分圧 pA</span></div>
                 <div class="meter-value-row">
                   <span class="meter-val val-a" id="dalton-pa-val">0.60</span>
-                  <span class="meter-unit">atm</span>
+                  <span class="meter-unit">×10⁵ Pa</span>
                 </div>
               </div>
               <div class="meter-card meter-gas-b">
                 <div class="meter-header"><span class="meter-title">気体Bの分圧 pB</span></div>
                 <div class="meter-value-row">
                   <span class="meter-val val-b" id="dalton-pb-val">0.40</span>
-                  <span class="meter-unit">atm</span>
+                  <span class="meter-unit">×10⁵ Pa</span>
                 </div>
               </div>
               <div class="meter-card meter-total">
                 <div class="meter-header"><span class="meter-title">全圧 P = pA + pB</span></div>
                 <div class="meter-value-row">
                   <span class="meter-val val-total" id="dalton-ptot-val">1.00</span>
-                  <span class="meter-unit">atm</span>
+                  <span class="meter-unit">×10⁵ Pa</span>
                 </div>
                 <div class="stacked-bar-container">
                   <div class="stacked-bar">
@@ -884,18 +982,21 @@
             <div class="control-item">
               <div class="control-label">
                 <span>気体Aの粒子数 (nA)</span>
-                <span class="c-a" id="ctrl-na-label">30 粒 (0.6 mol)</span>
+                <span class="c-a" id="ctrl-na-label">30 個 (0.60 mol)</span>
               </div>
               <input type="range" id="slider-na" min="10" max="50" step="5" value="30">
             </div>
             <div class="control-item">
               <div class="control-label">
                 <span>気体Bの粒子数 (nB)</span>
-                <span class="c-b" id="ctrl-nb-label">20 粒 (0.4 mol)</span>
+                <span class="c-b" id="ctrl-nb-label">20 個 (0.40 mol)</span>
               </div>
               <input type="range" id="slider-nb" min="0" max="50" step="5" value="20">
             </div>
           </div>
+          <p class="model-note">
+            ※ 容器の体積 V と温度 T は一定です。このモデルでは粒子1個を 0.020 mol とみなします。V・T が一定なので分圧は物質量に比例し（p = nRT / V）、この設定では 1.00 mol あたり 1.00×10⁵ Pa です（たとえば 300 K・24.9 L の容器に相当）。
+          </p>
 
           <div class="insight-box">
             <strong>🎯 ドルトンの分圧の法則：全圧は分圧の単純な「和」になる！</strong>
@@ -917,6 +1018,7 @@
                   <span class="meter-val val-a" id="mole-xa-val">0.75</span>
                   <span class="meter-unit">(75%)</span>
                 </div>
+                <div class="meter-sub" id="mole-pa-sub">分圧 pA = P × xA = 0.75×10⁵ Pa</div>
               </div>
               <div class="meter-card meter-gas-b">
                 <div class="meter-header"><span class="meter-title">モル分率 xB = nB / n全</span></div>
@@ -924,13 +1026,19 @@
                   <span class="meter-val val-b" id="mole-xb-val">0.25</span>
                   <span class="meter-unit">(25%)</span>
                 </div>
+                <div class="meter-sub" id="mole-pb-sub">分圧 pB = P × xB = 0.25×10⁵ Pa</div>
               </div>
               <div class="meter-card meter-total">
-                <div class="meter-header"><span class="meter-title">分圧比 pA : pB</span></div>
+                <div class="meter-header"><span class="meter-title">物質量の比と分圧の比を比べよう</span></div>
+                <div class="meter-value-row">
+                  <span class="meter-val val-total" id="mole-nratio-val">3 : 1</span>
+                  <span class="meter-unit">物質量の比 nA : nB</span>
+                </div>
                 <div class="meter-value-row">
                   <span class="meter-val val-total" id="mole-ratio-val">3 : 1</span>
-                  <span class="meter-unit">一致！</span>
+                  <span class="meter-unit">分圧の比 pA : pB</span>
                 </div>
+                <div class="meter-sub" id="mole-match-sub">2つの比が一致！</div>
               </div>
             </div>
           </div>
@@ -944,6 +1052,9 @@
               <input type="range" id="slider-mix-ratio" min="0" max="100" step="5" value="75">
             </div>
           </div>
+          <p class="model-note">
+            ※ 全分子数は 40 個、体積 V と温度 T は一定なので、全圧 P = 1.00×10⁵ Pa のまま変わりません。混合比率だけを変えて、分圧がどう分かれるかを見ます。
+          </p>
 
           <div class="insight-box">
             <strong>🎯 分圧比 ＝ 物質量比（モル比）＝ 粒子数の比！</strong>
@@ -956,6 +1067,13 @@
         <div class="sub-experiment" id="sub-cock" style="display:none;">
           <div class="canvas-box" style="margin-bottom: 16px;">
             <canvas id="canvas-cock" width="700" height="260"></canvas>
+          </div>
+
+          <div class="predict-box" id="predict-cock">
+            <strong class="predict-title">🤔 まず予想しよう</strong>
+            <div class="predict-q"></div>
+            <div class="predict-options"></div>
+            <div class="predict-result"></div>
           </div>
 
           <div class="cock-controls">
@@ -972,17 +1090,17 @@
               <div class="meter-header"><span class="meter-title">気体Aの分圧 pA</span></div>
               <div class="meter-value-row">
                 <span class="meter-val val-a" id="cock-pa-val">4.00</span>
-                <span class="meter-unit">atm</span>
+                <span class="meter-unit">×10⁵ Pa</span>
               </div>
-              <div class="meter-sub" id="cock-pa-sub">体積 1.0 L (左容器)</div>
+              <div class="meter-sub" id="cock-pa-sub">体積 1.00 L (左容器)</div>
             </div>
             <div class="meter-card meter-gas-b">
               <div class="meter-header"><span class="meter-title">気体Bの分圧 pB</span></div>
               <div class="meter-value-row">
                 <span class="meter-val val-b" id="cock-pb-val">2.00</span>
-                <span class="meter-unit">atm</span>
+                <span class="meter-unit">×10⁵ Pa</span>
               </div>
-              <div class="meter-sub" id="cock-pb-sub">体積 3.0 L (右容器)</div>
+              <div class="meter-sub" id="cock-pb-sub">体積 3.00 L (右容器)</div>
             </div>
           </div>
 
@@ -990,18 +1108,18 @@
             <div class="meter-header"><span class="meter-title">全体の全圧 P = pA + pB</span></div>
             <div class="meter-value-row">
               <span class="meter-val val-total" id="cock-ptot-val">---</span>
-              <span class="meter-unit">atm</span>
+              <span class="meter-unit">×10⁵ Pa</span>
             </div>
             <div class="meter-sub" id="cock-ptot-sub">コックが閉じているため、それぞれの容器で独立しています</div>
           </div>
 
           <div class="insight-box">
             <strong>🎯 入試頻出！コックを開けたときの解き方（きれいに割り切れる！）</strong>
-            コックを開けると、各気体は<strong>「全体の体積（1.0 L + 3.0 L = 4.0 L）」</strong>に向かって自由に広がります。<br>
+            コックを開けて十分に時間がたつと、各気体は<strong>「全体の体積（1.00 L + 3.00 L = 4.00 L）」</strong>に均一に広がります。<br>
             ① ボイルの法則でそれぞれの分圧を求める：<br>
-            &nbsp;&nbsp;・気体A：<code>pA = 4.00 atm × (1.0 L / 4.0 L) = 1.00 atm</code><br>
-            &nbsp;&nbsp;・気体B：<code>pB = 2.00 atm × (3.0 L / 4.0 L) = 1.50 atm</code><br>
-            ② 最後に足し算する：<code>全圧 P = 1.00 + 1.50 = 2.50 atm</code>
+            &nbsp;&nbsp;・気体A：<code>pA = 4.00×10⁵ Pa × (1.00 L / 4.00 L) = 1.00×10⁵ Pa</code><br>
+            &nbsp;&nbsp;・気体B：<code>pB = 2.00×10⁵ Pa × (3.00 L / 4.00 L) = 1.50×10⁵ Pa</code><br>
+            ② 最後に足し算する：<code>全圧 P = (1.00 + 1.50)×10⁵ Pa = 2.50×10⁵ Pa</code>
           </div>
         </div>
 
@@ -1023,7 +1141,7 @@
         </p>
 
         <div class="formula-board">
-          <div class="formula-title">Dalton's Laws & State Equations</div>
+          <div class="formula-title">分圧の法則と状態方程式</div>
           <div class="formula-row">
             <span class="formula-name">ドルトンの分圧の法則</span>
             <span class="formula-math f-tot">P = pA + pB + …</span>
@@ -1061,7 +1179,7 @@
 
         <div class="insight-box">
           <strong>💡 空気の見かけの分子量（平均分子量）</strong>
-          空気は窒素（分子量28）が約80%、酸素（分子量32）が約20%の混合気体です。<br>
+          空気は、物質量の比（体積比）で窒素（分子量28）が約80%、酸素（分子量32）が約20%の混合気体とみなせます。<br>
           平均分子量 ＝ <code>28 × 0.8 + 32 × 0.2 ＝ 28.8</code><br>
           これもモル分率の考え方そのものです！
         </div>
@@ -1083,51 +1201,8 @@
           身につけた直感をためす3つの問題です。計算用紙なしでも直感で解けます！
         </p>
 
-        <!-- Q1 -->
-        <div class="quiz-card" id="q1">
-          <span class="quiz-num">第 1 問</span>
-          <div class="quiz-q">
-            大気圧（全圧 1.00 atm）の部屋の中に、窒素と酸素がモル比 4 : 1 で混ざっています。<br>
-            この部屋の中にある「酸素の分圧」はいくらでしょうか？
-          </div>
-          <div class="quiz-options">
-            <button class="quiz-btn" onclick="checkAnswer(1, 0, false)">A. 0.50 atm</button>
-            <button class="quiz-btn" onclick="checkAnswer(1, 1, true)">B. 0.20 atm</button>
-            <button class="quiz-btn" onclick="checkAnswer(1, 2, false)">C. 0.80 atm</button>
-          </div>
-          <div class="quiz-feedback" id="fb-1"></div>
-        </div>
-
-        <!-- Q2 -->
-        <div class="quiz-card" id="q2">
-          <span class="quiz-num">第 2 問</span>
-          <div class="quiz-q">
-            同じ容器に「とても重い分子（キセノン）」と「とても軽い分子（ヘリウム）」をちょうど同じ分子数（同モル）ずつ入れました。<br>
-            2つの気体の分圧を比べると、どうなるでしょうか？
-          </div>
-          <div class="quiz-options">
-            <button class="quiz-btn" onclick="checkAnswer(2, 0, false)">A. 重いキセノンの方が壁に強くぶつかるので分圧が大きい</button>
-            <button class="quiz-btn" onclick="checkAnswer(2, 1, true)">B. 分子の重さに関係なく、どちらの分圧もまったく同じ</button>
-            <button class="quiz-btn" onclick="checkAnswer(2, 2, false)">C. 軽いヘリウムの方がスピードが速いので分圧が大きい</button>
-          </div>
-          <div class="quiz-feedback" id="fb-2"></div>
-        </div>
-
-        <!-- Q3 -->
-        <div class="quiz-card" id="q3">
-          <span class="quiz-num">第 3 問</span>
-          <div class="quiz-q">
-            体積 1.0 L、圧力 4.00 atm の気体Aの入った容器と、<br>
-            体積 3.0 L、圧力 2.00 atm の気体Bの入った容器をつなぐコックを開けました。<br>
-            混合後の容器全体の「全圧」はいくらになるでしょうか？（温度一定）
-          </div>
-          <div class="quiz-options">
-            <button class="quiz-btn" onclick="checkAnswer(3, 0, false)">A. 6.00 atm</button>
-            <button class="quiz-btn" onclick="checkAnswer(3, 1, false)">B. 3.00 atm</button>
-            <button class="quiz-btn" onclick="checkAnswer(3, 2, true)">C. 2.50 atm</button>
-          </div>
-          <div class="quiz-feedback" id="fb-3"></div>
-        </div>
+        <!-- 問題は QUIZ_DATA（スクリプト内）から描画 -->
+        <div id="quiz-list"></div>
 
         <div class="step-nav-bar">
           <button class="btn-nav prev prev-step" data-target="3">← ステップ3へ</button>
@@ -1144,11 +1219,20 @@
         </h2>
         <p class="card-desc">
           模試や大学入試で頻出の「連結2容器の温度差問題」です。<br>
-          各容器の温度を変えたとき、<strong>「コックが閉じているとき」</strong>と<strong>「コックが開いているとき」</strong>で何が違うのかを直感で確かめましょう！
+          各容器の温度を変えたとき、<strong>「コックが閉じているとき」</strong>と<strong>「コックが開いているとき」</strong>で何が違うのかを直感で確かめましょう！<br>
+          ※ 容器1と容器2には<strong>同じ種類の気体（1種類）</strong>が入っています。
         </p>
 
         <div class="canvas-box" style="margin-bottom: 16px;">
           <canvas id="canvas-temp" width="700" height="270"></canvas>
+        </div>
+
+        <div class="predict-box" id="predict-temp">
+          <strong class="predict-title">🤔 まず予想しよう</strong>
+          <div class="predict-q"></div>
+          <div class="predict-options"></div>
+          <button class="predict-check">▶ この条件で確かめる</button>
+          <div class="predict-result"></div>
         </div>
 
         <!-- コック操作ボタン -->
@@ -1181,24 +1265,24 @@
 
         <!-- 状態表示メーター -->
         <div class="stage-grid" style="margin-top: 16px;">
-          <div class="meter-card meter-gas-a">
+          <div class="meter-card meter-single">
             <div class="meter-header">
               <span class="meter-title">容器1（左: 1.0 L）の圧力 P1</span>
             </div>
             <div class="meter-value-row">
-              <span class="meter-val val-a" id="temp-p1-val">1.00</span>
-              <span class="meter-unit">atm</span>
+              <span class="meter-val val-single" id="temp-p1-val">1.00</span>
+              <span class="meter-unit">×10⁵ Pa</span>
             </div>
             <div class="meter-sub" id="temp-n1-sub">粒子数: 15 個 (25.0%)</div>
           </div>
 
-          <div class="meter-card meter-gas-b">
+          <div class="meter-card meter-single">
             <div class="meter-header">
               <span class="meter-title">容器2（右: 3.0 L）の圧力 P2</span>
             </div>
             <div class="meter-value-row">
-              <span class="meter-val val-b" id="temp-p2-val">1.00</span>
-              <span class="meter-unit">atm</span>
+              <span class="meter-val val-single" id="temp-p2-val">1.00</span>
+              <span class="meter-unit">×10⁵ Pa</span>
             </div>
             <div class="meter-sub" id="temp-n2-sub">粒子数: 45 個 (75.0%)</div>
           </div>
@@ -1230,7 +1314,7 @@
 
   <footer>
     混合気体ラボ — 高等学校化学「混合気体と分圧の法則」学習アプリ
-    <span class="version">ver.1.0.0</span>
+    <span class="version">ver.1.1.0</span>
   </footer>
 
   <script>
@@ -1277,7 +1361,7 @@
        ========================================================== */
     class Particle {
       constructor(type, x, y, vx, vy, radius = 5.5) {
-        this.type = type; // 'a' (青), 'b' (赤橙)
+        this.type = type; // 'a' (青), 'b' (赤橙), 'single' (ステップ5の1種類の気体: スレート)
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -1313,12 +1397,203 @@
 
         if (this.type === 'a') {
           ctx.fillStyle = `rgba(37, 99, 235, ${alpha})`;
+        } else if (this.type === 'single') {
+          ctx.fillStyle = `rgba(71, 85, 105, ${alpha})`;
         } else {
           ctx.fillStyle = `rgba(234, 88, 12, ${alpha})`;
         }
         ctx.fill();
         ctx.restore();
       }
+    }
+
+    // 圧力の単位（数値は 10⁵ Pa を単位として扱う）
+    const P_UNIT = '×10⁵ Pa';
+
+    // 表示中の canvas だけを毎フレーム更新する（非表示のステップ・実験では処理を止めて電池消費を抑える）
+    function runWhenVisible(canvas, frame) {
+      function tick() {
+        if (canvas.offsetParent !== null) frame();
+        requestAnimationFrame(tick);
+      }
+      tick();
+    }
+
+    /* 予想 → 観察 → 説明: 実験の前に予想を選ばせ、結果が出たら照らし合わせる
+       data: { question, options, answer, feedback[選択肢ごと], explanation,
+               prompt（予想を選んだ後の案内）, skippedMessage（予想せずに結果を見たときの案内） } */
+    function createPrediction(rootId, data) {
+      const root = document.getElementById(rootId);
+      const optsBox = root.querySelector('.predict-options');
+      const result = root.querySelector('.predict-result');
+      const checkBtn = root.querySelector('.predict-check');
+      const state = { choice: null, revealed: false };
+      root.querySelector('.predict-q').innerHTML = data.question;
+
+      const btns = data.options.map((label, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'predict-btn';
+        btn.textContent = label;
+        btn.addEventListener('click', () => {
+          if (state.revealed) return;
+          state.choice = idx;
+          btns.forEach((b, i) => b.classList.toggle('selected', i === idx));
+          result.textContent = data.prompt;
+          if (checkBtn) checkBtn.classList.add('show');
+        });
+        optsBox.appendChild(btn);
+        return btn;
+      });
+
+      return {
+        checkBtn,
+        // 予想が選ばれていれば答え合わせをする
+        reveal() {
+          if (state.revealed) return;
+          state.revealed = true;
+          if (state.choice === null) {
+            // 予想せずに結果を見た場合は、予想の選択を締め切ってやり直し方を案内する
+            btns.forEach(b => { b.disabled = true; });
+            if (checkBtn) checkBtn.classList.remove('show');
+            result.textContent = data.skippedMessage;
+            return;
+          }
+          btns.forEach((b, i) => {
+            b.disabled = true;
+            b.classList.remove('selected');
+            if (i === state.choice && i !== data.answer) b.classList.add('wrong');
+            if (i === data.answer) b.classList.add('correct');
+          });
+          if (checkBtn) checkBtn.classList.remove('show');
+          result.innerHTML = '';
+          const reason = document.createElement('div');
+          reason.textContent = data.feedback[state.choice];
+          const expl = document.createElement('div');
+          expl.textContent = `解説：${data.explanation}`;
+          result.append(reason, expl);
+        },
+        reset() {
+          state.choice = null;
+          state.revealed = false;
+          btns.forEach(b => {
+            b.disabled = false;
+            b.classList.remove('selected', 'correct', 'wrong');
+          });
+          if (checkBtn) checkBtn.classList.remove('show');
+          result.textContent = '';
+        }
+      };
+    }
+
+    // 指定範囲にランダムな位置・向きで粒子を生成する（speed は数値または毎回呼ぶ関数）
+    function spawnParticles(type, count, x0, w, y0, h, speed) {
+      const list = [];
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = (typeof speed === 'function') ? speed() : speed;
+        list.push(new Particle(type, x0 + Math.random() * w, y0 + Math.random() * h, Math.cos(angle) * spd, Math.sin(angle) * spd));
+      }
+      return list;
+    }
+
+    /* ==========================================================
+       2容器（コック付き）共通: 壁判定・描画
+       ========================================================== */
+    // leftWall/rightWall: パイプ部の左右端の x, pipeTop/pipeBottom: パイプの上下の y
+    function createVessel(canvas, opts) {
+      return Object.assign({ canvas, ctx: canvas.getContext('2d') }, opts);
+    }
+
+    function updateVesselParticle(p, v, isOpen) {
+      const W = v.canvas.width, H = v.canvas.height;
+      const L = v.leftWall, R = v.rightWall, r = p.radius;
+      const valveX = (L + R) / 2;
+      const prevX = p.x;
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // 外壁
+      if (p.x - r < 10) { p.x = 10 + r; p.vx *= -1; }
+      if (p.x + r > W - 10) { p.x = W - 10 - r; p.vx *= -1; }
+      if (p.y - r < 10) { p.y = 10 + r; p.vy *= -1; }
+      if (p.y + r > H - 10) { p.y = H - 10 - r; p.vy *= -1; }
+
+      // 容器の内側の壁: パイプの口の高さ以外は通れない
+      const inPipeY = (p.y > v.pipeTop && p.y < v.pipeBottom);
+      if (prevX <= L && p.x + r > L && !inPipeY) {
+        p.x = L - r;
+        p.vx = -Math.abs(p.vx);
+      } else if (prevX >= R && p.x - r < R && !inPipeY) {
+        p.x = R + r;
+        p.vx = Math.abs(p.vx);
+      }
+
+      // パイプの中: 上下の壁で跳ね返り、コックが閉じていれば弁で跳ね返る
+      if (p.x > L && p.x < R) {
+        if (p.y - r < v.pipeTop) { p.y = v.pipeTop + r; p.vy = Math.abs(p.vy); }
+        if (p.y + r > v.pipeBottom) { p.y = v.pipeBottom - r; p.vy = -Math.abs(p.vy); }
+        if (!isOpen) {
+          if (prevX < valveX && p.x + r > valveX - 4) {
+            p.x = valveX - 4 - r;
+            p.vx = -Math.abs(p.vx);
+          } else if (prevX >= valveX && p.x - r < valveX + 4) {
+            p.x = valveX + 4 + r;
+            p.vx = Math.abs(p.vx);
+          }
+        }
+      }
+    }
+
+    // bgColors: [左容器, 右容器] の背景色（省略可）, labels: [左, 右] の容器ラベル
+    function drawVessel(v, isOpen, labels, bgColors) {
+      const ctx = v.ctx, W = v.canvas.width, H = v.canvas.height;
+      const L = v.leftWall, R = v.rightWall;
+      ctx.save();
+
+      if (bgColors) {
+        ctx.fillStyle = bgColors[0];
+        ctx.fillRect(10, 10, L - 10, H - 20);
+        ctx.fillStyle = bgColors[1];
+        ctx.fillRect(R, 10, W - R - 10, H - 20);
+      }
+
+      // 外枠
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, L - 10, H - 20);
+      ctx.strokeRect(R, 10, W - R - 10, H - 20);
+
+      // パイプ連結部
+      ctx.beginPath();
+      ctx.moveTo(L, v.pipeTop);
+      ctx.lineTo(R, v.pipeTop);
+      ctx.moveTo(L, v.pipeBottom);
+      ctx.lineTo(R, v.pipeBottom);
+      ctx.stroke();
+
+      // コック弁
+      const valveX = (L + R) / 2;
+      ctx.font = 'bold 12px "Noto Sans JP"';
+      ctx.textAlign = 'center';
+      if (!isOpen) {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(valveX - 4, v.pipeTop - 10, 8, (v.pipeBottom - v.pipeTop) + 20);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText('コック [閉]', valveX, v.pipeTop - 20);
+      } else {
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(valveX - 4, v.pipeTop - 25, 8, 15);
+        ctx.fillText('コック [開]', valveX, v.openLabelY);
+      }
+
+      // 容器ラベル
+      ctx.fillStyle = v.labelColor;
+      ctx.font = 'bold 13px "Noto Sans JP"';
+      ctx.textAlign = 'center';
+      ctx.fillText(labels[0], (10 + L) / 2, H - 18);
+      ctx.fillText(labels[1], (R + W - 10) / 2, H - 18);
+
+      ctx.restore();
     }
 
     /* ==========================================================
@@ -1328,17 +1603,11 @@
     const ctx1 = c1.getContext('2d');
     let viewFilter = 'both';
 
-    const particles1 = [];
-    for (let i = 0; i < 30; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 2.0 + Math.random() * 1.4;
-      particles1.push(new Particle('a', 20 + Math.random() * 420, 20 + Math.random() * 260, Math.cos(angle) * speed, Math.sin(angle) * speed));
-    }
-    for (let i = 0; i < 20; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 2.0 + Math.random() * 1.4;
-      particles1.push(new Particle('b', 20 + Math.random() * 420, 20 + Math.random() * 260, Math.cos(angle) * speed, Math.sin(angle) * speed));
-    }
+    const randomSpeed1 = () => 2.0 + Math.random() * 1.4;
+    const particles1 = [
+      ...spawnParticles('a', 30, 20, 420, 20, 260, randomSpeed1),
+      ...spawnParticles('b', 20, 20, 420, 20, 260, randomSpeed1)
+    ];
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1367,9 +1636,8 @@
         p.update(c1.width, c1.height);
         p.draw(ctx1, viewFilter);
       });
-      requestAnimationFrame(loopStep1);
     }
-    loopStep1();
+    runWhenVisible(c1, loopStep1);
 
     /* ==========================================================
        ステップ2 実験①: ドルトンの法則 (スライダー連動)
@@ -1379,17 +1647,10 @@
     let particlesDalton = [];
 
     function initDaltonParticles(na, nb) {
-      particlesDalton = [];
-      for (let i = 0; i < na; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const spd = 2.2;
-        particlesDalton.push(new Particle('a', 20 + Math.random() * 420, 20 + Math.random() * 240, Math.cos(angle)*spd, Math.sin(angle)*spd));
-      }
-      for (let i = 0; i < nb; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const spd = 2.2;
-        particlesDalton.push(new Particle('b', 20 + Math.random() * 420, 20 + Math.random() * 240, Math.cos(angle)*spd, Math.sin(angle)*spd));
-      }
+      particlesDalton = [
+        ...spawnParticles('a', na, 20, 420, 20, 240, 2.2),
+        ...spawnParticles('b', nb, 20, 420, 20, 240, 2.2)
+      ];
     }
 
     const sliderNa = document.getElementById('slider-na');
@@ -1398,8 +1659,8 @@
     function updateDaltonUI() {
       const na = parseInt(sliderNa.value, 10);
       const nb = parseInt(sliderNb.value, 10);
-      document.getElementById('ctrl-na-label').textContent = `${na} 粒 (${(na * 0.02).toFixed(2)} mol)`;
-      document.getElementById('ctrl-nb-label').textContent = `${nb} 粒 (${(nb * 0.02).toFixed(2)} mol)`;
+      document.getElementById('ctrl-na-label').textContent = `${na} 個 (${(na * 0.02).toFixed(2)} mol)`;
+      document.getElementById('ctrl-nb-label').textContent = `${nb} 個 (${(nb * 0.02).toFixed(2)} mol)`;
 
       const pa = (na * 0.02).toFixed(2);
       const pb = (nb * 0.02).toFixed(2);
@@ -1428,9 +1689,8 @@
         p.update(cDalton.width, cDalton.height);
         p.draw(ctxDalton, 'both');
       });
-      requestAnimationFrame(loopDalton);
     }
-    loopDalton();
+    runWhenVisible(cDalton, loopDalton);
 
     /* ==========================================================
        ステップ2 実験②: モル分率
@@ -1439,32 +1699,40 @@
     const ctxMole = cMole.getContext('2d');
     let particlesMole = [];
 
+    const MOLE_TOTAL_PARTICLES = 40;
+    const MOLE_TOTAL_P = 1.00; // ×10⁵ Pa
+
     function updateMoleUI() {
       const ratio = parseInt(document.getElementById('slider-mix-ratio').value, 10);
       const pctA = ratio;
       const pctB = 100 - ratio;
       document.getElementById('ctrl-mix-label').textContent = `気体A: ${pctA}% | 気体B: ${pctB}%`;
 
-      const xA = (pctA / 100).toFixed(2);
-      const xB = (pctB / 100).toFixed(2);
-      document.getElementById('mole-xa-val').textContent = xA;
-      document.getElementById('mole-xb-val').textContent = xB;
+      // 全分子数 40 個・全圧 P = 1.00×10⁵ Pa（V・T 一定）
+      const countA = Math.round(MOLE_TOTAL_PARTICLES * (pctA / 100));
+      const countB = MOLE_TOTAL_PARTICLES - countA;
+      const xA = countA / MOLE_TOTAL_PARTICLES;
+      const xB = countB / MOLE_TOTAL_PARTICLES;
+      // 分圧は物質量に比例: pA = P × xA
+      const pA = MOLE_TOTAL_P * xA;
+      const pB = MOLE_TOTAL_P * xB;
+      document.getElementById('mole-xa-val').textContent = xA.toFixed(2);
+      document.getElementById('mole-xb-val').textContent = xB.toFixed(2);
+      document.getElementById('mole-pa-sub').textContent = `分圧 pA = P × xA = ${pA.toFixed(2)}${P_UNIT}`;
+      document.getElementById('mole-pb-sub').textContent = `分圧 pB = P × xB = ${pB.toFixed(2)}${P_UNIT}`;
 
+      // 物質量の比（分子数から）と分圧の比（分圧の値から）を、それぞれ別に約分して並べる
       const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
-      const g = gcd(pctA, pctB) || 1;
-      document.getElementById('mole-ratio-val').textContent = `${pctA/g} : ${pctB/g}`;
-
-      const countA = Math.round(40 * (pctA / 100));
-      const countB = 40 - countA;
-      particlesMole = [];
-      for (let i = 0; i < countA; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        particlesMole.push(new Particle('a', 20 + Math.random() * 420, 20 + Math.random() * 240, Math.cos(angle)*2.2, Math.sin(angle)*2.2));
-      }
-      for (let i = 0; i < countB; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        particlesMole.push(new Particle('b', 20 + Math.random() * 420, 20 + Math.random() * 240, Math.cos(angle)*2.2, Math.sin(angle)*2.2));
-      }
+      const simplify = (a, b) => { const g = gcd(a, b) || 1; return `${a / g} : ${b / g}`; };
+      const nRatio = simplify(countA, countB);
+      const pRatio = simplify(Math.round(pA * 1000), Math.round(pB * 1000));
+      document.getElementById('mole-nratio-val').textContent = nRatio;
+      document.getElementById('mole-ratio-val').textContent = pRatio;
+      document.getElementById('mole-match-sub').textContent = (nRatio === pRatio) ? '2つの比が一致！' : '';
+      particlesMole = [
+        ...spawnParticles('a', countA, 20, 420, 20, 240, 2.2),
+        ...spawnParticles('b', countB, 20, 420, 20, 240, 2.2)
+      ];
     }
     document.getElementById('slider-mix-ratio').addEventListener('input', updateMoleUI);
     updateMoleUI();
@@ -1475,45 +1743,87 @@
         p.update(cMole.width, cMole.height);
         p.draw(ctxMole, 'both');
       });
-      requestAnimationFrame(loopMole);
     }
-    loopMole();
+    runWhenVisible(cMole, loopMole);
 
     /* ==========================================================
-       ステップ2 実験③: コックを開けて混合シミュレータ (1.0 L & 3.0 L)
+       ステップ2 実験③: コックを開けて混合シミュレータ (1.00 L & 3.00 L)
        ========================================================== */
     const cCock = document.getElementById('canvas-cock');
-    const ctxCock = cCock.getContext('2d');
     let isCockOpen = false;
     let cockParticles = [];
 
-    // 左容器: 10 〜 190 (幅180, 体積1.0 L比)
-    // コック部: 190 〜 230 (幅40)
-    // 右容器: 230 〜 690 (幅460, 体積3.0 L比)
-    const COCK_LEFT_WALL = 190;
-    const COCK_RIGHT_WALL = 230;
+    // 左容器: 10 〜 170 (幅160, 体積1.0 L比)
+    // コック部: 170 〜 210 (幅40)
+    // 右容器: 210 〜 690 (幅480, 体積3.0 L比) → 幅の比 1 : 3 = 体積比
+    const cockVessel = createVessel(cCock, {
+      leftWall: 170, rightWall: 210, pipeTop: 105, pipeBottom: 155,
+      openLabelY: 72, labelColor: '#64748b'
+    });
+
+    // 実験③の設定値（体積 L, 混合前の圧力 ×10⁵ Pa）。表示・計算・粒子数はすべてここから求める
+    const COCK_SETUP = { V1: 1.0, V2: 3.0, PA0: 4.00, PB0: 2.00, totalParticles: 60 };
+    const fmtCockV = v => v.toFixed(2);
+    const fmtCockP = p => p.toFixed(2);
+
+    // 温度一定・ボイルの法則: 各気体は全体積 V1 + V2 に広がる
+    function calcCockMixed() {
+      const { V1, V2, PA0, PB0 } = COCK_SETUP;
+      const Vt = V1 + V2;
+      const pa = PA0 * V1 / Vt;
+      const pb = PB0 * V2 / Vt;
+      return { Vt, pa, pb, ptot: pa + pb };
+    }
+
+    // 体積比を約分した分数の文字列（例: 1.0 / 4.0 → "1/4"）
+    function volumeFraction(v, vt) {
+      const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+      const a = Math.round(v * 10), b = Math.round(vt * 10);
+      const g = gcd(a, b) || 1;
+      return `${a / g}/${b / g}`;
+    }
+
+    // 実験③の予想（選択肢: 単純な和・単純な平均・正しい全圧）
+    const cockPrediction = (() => {
+      const { V1, V2, PA0, PB0 } = COCK_SETUP;
+      const m = calcCockMixed();
+      const u = P_UNIT;
+      return createPrediction('predict-cock', {
+        question: `コックを開けて十分に時間がたつと、容器全体の全圧はいくらになるでしょうか？`,
+        options: [fmtCockP(PA0 + PB0) + u, fmtCockP((PA0 + PB0) / 2) + u, fmtCockP(m.ptot) + u],
+        answer: 2,
+        feedback: [
+          `残念！${fmtCockP(PA0 + PB0)}${u} は、混合前の圧力をそのまま足した値です。各気体は全体の体積に広がるので、分圧は混合前より小さくなります。`,
+          `残念！${fmtCockP((PA0 + PB0) / 2)}${u} は、2つの圧力の単純な平均です。容器の体積が違うので、単純な平均にはなりません。`,
+          '🎉 予想どおり！'
+        ],
+        explanation: `各気体は全体の ${fmtCockV(m.Vt)} L に広がります。ボイルの法則より pA = ${fmtCockP(PA0)}${u} × ${volumeFraction(V1, m.Vt)} = ${fmtCockP(m.pa)}${u}、pB = ${fmtCockP(PB0)}${u} × ${volumeFraction(V2, m.Vt)} = ${fmtCockP(m.pb)}${u}。全圧はその和で ${fmtCockP(m.ptot)}${u} です。`,
+        prompt: '予想を決めたら、コックを開いて確かめよう！',
+        skippedMessage: '予想する前にコックを開けました。「最初に戻す」を押すと、予想からやり直せます。'
+      });
+    })();
 
     function resetCockSim() {
+      const { V1, V2, PA0, PB0, totalParticles } = COCK_SETUP;
       isCockOpen = false;
+      cockPrediction.reset();
       document.getElementById('btn-cock-toggle').innerHTML = '🚪 コックを開く（混合スタート）';
-      document.getElementById('cock-pa-val').textContent = '4.00';
-      document.getElementById('cock-pb-val').textContent = '2.00';
+      document.getElementById('cock-pa-val').textContent = fmtCockP(PA0);
+      document.getElementById('cock-pb-val').textContent = fmtCockP(PB0);
       document.getElementById('cock-ptot-val').textContent = '---';
-      document.getElementById('cock-pa-sub').textContent = '体積 1.0 L (左容器)';
-      document.getElementById('cock-pb-sub').textContent = '体積 3.0 L (右容器)';
+      document.getElementById('cock-pa-sub').textContent = `体積 ${fmtCockV(V1)} L (左容器)`;
+      document.getElementById('cock-pb-sub').textContent = `体積 ${fmtCockV(V2)} L (右容器)`;
       document.getElementById('cock-ptot-sub').textContent = 'コックが閉じているため、それぞれの容器で独立しています';
 
-      cockParticles = [];
-      // 左に気体A: 24個
-      for (let i = 0; i < 24; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        cockParticles.push(new Particle('a', 20 + Math.random() * (COCK_LEFT_WALL - 30), 20 + Math.random() * 220, Math.cos(angle)*2.4, Math.sin(angle)*2.4));
-      }
-      // 右に気体B: 36個
-      for (let i = 0; i < 36; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        cockParticles.push(new Particle('b', (COCK_RIGHT_WALL + 15) + Math.random() * (cCock.width - COCK_RIGHT_WALL - 30), 20 + Math.random() * 220, Math.cos(angle)*2.4, Math.sin(angle)*2.4));
-      }
+      // 粒子数の比 = 物質量の比 = PV の比（温度一定）
+      const countA = Math.round(totalParticles * (PA0 * V1) / (PA0 * V1 + PB0 * V2));
+      const L = cockVessel.leftWall, R = cockVessel.rightWall;
+      cockParticles = [
+        // 左に気体A
+        ...spawnParticles('a', countA, 20, L - 30, 20, 220, 2.4),
+        // 右に気体B
+        ...spawnParticles('b', totalParticles - countA, R + 15, cCock.width - R - 30, 20, 220, 2.4)
+      ];
     }
     resetCockSim();
 
@@ -1521,166 +1831,174 @@
       isCockOpen = !isCockOpen;
       if (isCockOpen) {
         document.getElementById('btn-cock-toggle').innerHTML = '🔒 コックを閉じる';
-        // 計算:
-        // pA = 4.00 * (1.0 / 4.0) = 1.00 atm
-        // pB = 2.00 * (3.0 / 4.0) = 1.50 atm
-        // P = 1.00 + 1.50 = 2.50 atm
-        document.getElementById('cock-pa-val').textContent = '1.00';
-        document.getElementById('cock-pb-val').textContent = '1.50';
-        document.getElementById('cock-ptot-val').textContent = '2.50';
-        document.getElementById('cock-pa-sub').textContent = '体積 4.0 L に拡散 (4.00 × 1/4)';
-        document.getElementById('cock-pb-sub').textContent = '体積 4.0 L に拡散 (2.00 × 3/4)';
-        document.getElementById('cock-ptot-sub').textContent = '全圧 P = 1.00 + 1.50 = 2.50 atm（きれいに求まります！）';
+        cockPrediction.reveal();
+        const { V1, V2, PA0, PB0 } = COCK_SETUP;
+        const m = calcCockMixed();
+        document.getElementById('cock-pa-val').textContent = fmtCockP(m.pa);
+        document.getElementById('cock-pb-val').textContent = fmtCockP(m.pb);
+        document.getElementById('cock-ptot-val').textContent = fmtCockP(m.ptot);
+        document.getElementById('cock-pa-sub').textContent = `体積 ${fmtCockV(m.Vt)} L に拡散 (${fmtCockP(PA0)} × ${volumeFraction(V1, m.Vt)})`;
+        document.getElementById('cock-pb-sub').textContent = `体積 ${fmtCockV(m.Vt)} L に拡散 (${fmtCockP(PB0)} × ${volumeFraction(V2, m.Vt)})`;
+        document.getElementById('cock-ptot-sub').textContent = `十分に時間がたち、全体に均一に混ざると 全圧 P = (${fmtCockP(m.pa)} + ${fmtCockP(m.pb)})${P_UNIT} = ${fmtCockP(m.ptot)}${P_UNIT}（きれいに求まります！）`;
       } else {
         document.getElementById('btn-cock-toggle').innerHTML = '🚪 コックを開く（混合スタート）';
+        const m = calcCockMixed();
+        document.getElementById('cock-pa-sub').textContent = '十分に混ざった後に閉じれば、どちらの容器でもこの分圧';
+        document.getElementById('cock-pb-sub').textContent = '十分に混ざった後に閉じれば、どちらの容器でもこの分圧';
+        document.getElementById('cock-ptot-sub').textContent = `コックを閉じました。十分に混ざった後に閉じた場合、どちらの容器も全圧 ${fmtCockP(m.ptot)}${P_UNIT} のままです（混ざりきる前に閉じると、容器ごとに値が異なります）`;
       }
     });
     document.getElementById('btn-cock-reset').addEventListener('click', resetCockSim);
 
-    function updateCockParticle(p) {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      // 外壁判定
-      if (p.x - p.radius < 10) { p.x = 10 + p.radius; p.vx *= -1; }
-      if (p.x + p.radius > cCock.width - 10) { p.x = cCock.width - 10 - p.radius; p.vx *= -1; }
-      if (p.y - p.radius < 10) { p.y = 10 + p.radius; p.vy *= -1; }
-      if (p.y + p.radius > cCock.height - 10) { p.y = cCock.height - 10 - p.radius; p.vy *= -1; }
-
-      // コック部 (y: 105〜155)
-      const inPipeY = (p.y > 105 && p.y < 155);
-
-      if (!isCockOpen) {
-        if (p.x < COCK_LEFT_WALL && p.x + p.radius >= COCK_LEFT_WALL) {
-          p.x = COCK_LEFT_WALL - p.radius;
-          p.vx *= -1;
-        } else if (p.x > COCK_RIGHT_WALL && p.x - p.radius <= COCK_RIGHT_WALL) {
-          p.x = COCK_RIGHT_WALL + p.radius;
-          p.vx *= -1;
-        }
-      } else {
-        if (!inPipeY) {
-          if (p.x < COCK_LEFT_WALL && p.x + p.radius >= COCK_LEFT_WALL) {
-            p.x = COCK_LEFT_WALL - p.radius;
-            p.vx *= -1;
-          } else if (p.x > COCK_RIGHT_WALL && p.x - p.radius <= COCK_RIGHT_WALL) {
-            p.x = COCK_RIGHT_WALL + p.radius;
-            p.vx *= -1;
-          }
-        }
-      }
-    }
-
     function loopCock() {
-      ctxCock.clearRect(0, 0, cCock.width, cCock.height);
-
-      ctxCock.save();
-      ctxCock.strokeStyle = '#94a3b8';
-      ctxCock.lineWidth = 3;
-
-      // 容器1 (1.0 L)
-      ctxCock.strokeRect(10, 10, COCK_LEFT_WALL - 10, cCock.height - 20);
-      // 容器2 (3.0 L)
-      ctxCock.strokeRect(COCK_RIGHT_WALL, 10, cCock.width - COCK_RIGHT_WALL - 10, cCock.height - 20);
-
-      // パイプ連結部
-      ctxCock.beginPath();
-      ctxCock.moveTo(COCK_LEFT_WALL, 105);
-      ctxCock.lineTo(COCK_RIGHT_WALL, 105);
-      ctxCock.moveTo(COCK_LEFT_WALL, 155);
-      ctxCock.lineTo(COCK_RIGHT_WALL, 155);
-      ctxCock.stroke();
-
-      // コック弁
-      const valveX = (COCK_LEFT_WALL + COCK_RIGHT_WALL) / 2;
-      if (!isCockOpen) {
-        ctxCock.fillStyle = '#ef4444';
-        ctxCock.fillRect(valveX - 4, 95, 8, 70);
-        ctxCock.fillStyle = '#0f172a';
-        ctxCock.font = 'bold 12px "Noto Sans JP"';
-        ctxCock.textAlign = 'center';
-        ctxCock.fillText('コック [閉]', valveX, 85);
-      } else {
-        ctxCock.fillStyle = '#10b981';
-        ctxCock.fillRect(valveX - 4, 80, 8, 15);
-        ctxCock.fillStyle = '#10b981';
-        ctxCock.font = 'bold 12px "Noto Sans JP"';
-        ctxCock.textAlign = 'center';
-        ctxCock.fillText('コック [開]', valveX, 72);
-      }
-
-      ctxCock.fillStyle = '#64748b';
-      ctxCock.font = 'bold 13px "Noto Sans JP"';
-      ctxCock.textAlign = 'center';
-      ctxCock.fillText('容器1 (体積 1.0 L)', (10 + COCK_LEFT_WALL) / 2, cCock.height - 18);
-      ctxCock.fillText('容器2 (体積 3.0 L)', (COCK_RIGHT_WALL + cCock.width - 10) / 2, cCock.height - 18);
-
-      ctxCock.restore();
+      cockVessel.ctx.clearRect(0, 0, cCock.width, cCock.height);
+      drawVessel(cockVessel, isCockOpen, [`容器1 (体積 ${fmtCockV(COCK_SETUP.V1)} L)`, `容器2 (体積 ${fmtCockV(COCK_SETUP.V2)} L)`]);
 
       cockParticles.forEach(p => {
-        updateCockParticle(p);
-        p.draw(ctxCock, 'both');
+        updateVesselParticle(p, cockVessel, isCockOpen);
+        p.draw(cockVessel.ctx, 'both');
       });
-
-      requestAnimationFrame(loopCock);
     }
-    loopCock();
+    runWhenVisible(cCock, loopCock);
 
     /* ==========================================================
        ステップ4: クイズ判定ロジック
        ========================================================== */
-    const quizExplanations = {
-      1: {
-        ok: '🎉 正解！モル比が 4 : 1 なので、酸素のモル分率は 1 / (4 + 1) = 0.20 です。分圧は 1.00 atm × 0.20 = 0.20 atm になります。',
-        ng: '残念！全モル数は 4 + 1 = 5 なので、酸素の割合（モル分率）は 1/5 = 0.20 です。分圧は 1.00 atm × 0.20 = 0.20 atm となります。'
+    // 問題データ: 問題の追加・修正はこの配列だけを編集する
+    // feedback: 選択肢ごとの「なぜその答えになるか／なぜ違うか」, explanation: 正解までの解き方
+    const QUIZ_DATA = [
+      {
+        question: '全圧 1.00×10⁵ Pa（ほぼ大気圧）の部屋の中に、窒素と酸素がモル比 4 : 1 で混ざっています。<br>この部屋の中にある「酸素の分圧」はいくらでしょうか？',
+        options: ['A. 0.50×10⁵ Pa', 'B. 0.20×10⁵ Pa', 'C. 0.80×10⁵ Pa'],
+        answer: 1,
+        feedback: [
+          '残念！0.50×10⁵ Pa は、窒素と酸素が 1 : 1 で混ざっているときの酸素の分圧です。',
+          '🎉 正解！',
+          '残念！0.80×10⁵ Pa は「窒素」の分圧です。モル比 4 : 1 の「1」が酸素です。'
+        ],
+        explanation: '物質量の比が 窒素 : 酸素 = 4 : 1 なので、酸素のモル分率は 1 / (4 + 1) = 0.20 です。分圧は 1.00×10⁵ Pa × 0.20 = 0.20×10⁵ Pa になります。'
       },
-      2: {
-        ok: '🎉 正解！理想気体の圧力は「分子の重さ」ではなく「分子の数（モル数）」と温度だけで決まります。重い分子は遅く、軽い分子は速く動くため、壁に与える力積（衝撃の合計）は完全に同じになります！',
-        ng: '惜しい！重い分子はスピードが遅く、軽い分子はスピードが速いため、同じ温度であれば分子の平均運動エネルギーは等しくなります。したがってモル数が同じなら分圧も等しくなります。'
+      {
+        question: '同じ容器に「とても重い分子（キセノン）」と「とても軽い分子（ヘリウム）」をちょうど同じ分子数（同モル）ずつ入れました。<br>2つの気体の分圧を比べると、どうなるでしょうか？',
+        options: [
+          'A. 重いキセノンの方が壁に強くぶつかるので分圧が大きい',
+          'B. 分子の重さに関係なく、どちらの分圧もまったく同じ',
+          'C. 軽いヘリウムの方がスピードが速いので分圧が大きい'
+        ],
+        answer: 1,
+        feedback: [
+          '残念！重い分子は1回の衝突で壁を強く押しますが、そのぶん動きが遅く、壁にぶつかる回数が少なくなります。',
+          '🎉 正解！',
+          '残念！軽い分子は速く動いて壁にぶつかる回数は多いですが、そのぶん1回の衝突で壁を押す力が小さくなります。'
+        ],
+        explanation: '同じ容器（同じ体積 V）・同じ温度 T では、分圧は物質量 n だけで決まります（p = nRT / V）。気体の種類や分子の重さは関係しません。〔補足〕分子の運動で考えると、同じ温度では重い分子は遅く、軽い分子は速く動き、分子1個あたりの平均の運動エネルギーが等しくなるため、壁を押すはたらきも等しくなります。'
       },
-      3: {
-        ok: '🎉 正解！全体の体積は 1.0 + 3.0 = 4.0 L です。ボイルの法則により、気体Aの分圧は 4.00 × (1/4) = 1.00 atm、気体Bの分圧は 2.00 × (3/4) = 1.50 atm となり、全圧は 1.00 + 1.50 = 2.50 atm になります！',
-        ng: '残念！体積が 4.0 L に広がるため、ボイルの法則により各気体の分圧はそれぞれ pA = 1.00 atm、pB = 1.50 atm になります。ドルトンの法則で足し合わせると全圧は 2.50 atm です。'
+      {
+        question: '体積 2.00 L、圧力 3.00×10⁵ Pa の気体Aの入った容器と、<br>体積 3.00 L、圧力 1.00×10⁵ Pa の気体Bの入った容器をつなぐコックを開けました。<br>混合後の容器全体の「全圧」はいくらになるでしょうか？（温度一定）',
+        options: ['A. 4.00×10⁵ Pa', 'B. 2.00×10⁵ Pa', 'C. 1.80×10⁵ Pa'],
+        answer: 2,
+        feedback: [
+          '残念！4.00×10⁵ Pa は、混合前の圧力 3.00×10⁵ Pa と 1.00×10⁵ Pa をそのまま足した値です。コックを開くと各気体は全体の体積に広がるので、先に分圧を求めてから足します。',
+          '残念！2.00×10⁵ Pa は、3.00×10⁵ Pa と 1.00×10⁵ Pa の単純な平均です。2つの容器の体積が違うので、単純な平均にはなりません。',
+          '🎉 正解！'
+        ],
+        explanation: '全体の体積は 2.00 + 3.00 = 5.00 L です。ボイルの法則により、気体Aの分圧は 3.00×10⁵ Pa × (2.00 / 5.00) = 1.20×10⁵ Pa、気体Bの分圧は 1.00×10⁵ Pa × (3.00 / 5.00) = 0.600×10⁵ Pa となり、ドルトンの法則で足し合わせると全圧は (1.20 + 0.600)×10⁵ Pa = 1.80×10⁵ Pa になります。'
       }
-    };
+    ];
 
-    function checkAnswer(qNum, optIdx, isCorrect) {
+    function renderQuiz() {
+      const list = document.getElementById('quiz-list');
+      QUIZ_DATA.forEach((q, i) => {
+        const qNum = i + 1;
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        card.id = `q${qNum}`;
+        card.innerHTML = `
+          <span class="quiz-num">第 ${qNum} 問</span>
+          <div class="quiz-q">${q.question}</div>
+          <div class="quiz-options"></div>
+          <div class="quiz-feedback" id="fb-${qNum}"></div>
+          <button class="quiz-retry" id="retry-${qNum}">🔄 もう一度解く</button>`;
+        const opts = card.querySelector('.quiz-options');
+        q.options.forEach((label, optIdx) => {
+          const btn = document.createElement('button');
+          btn.className = 'quiz-btn';
+          btn.textContent = label;
+          btn.addEventListener('click', () => checkAnswer(qNum, optIdx));
+          opts.appendChild(btn);
+        });
+        card.querySelector('.quiz-retry').addEventListener('click', () => resetQuestion(qNum));
+        list.appendChild(card);
+      });
+    }
+
+    function resetQuestion(qNum) {
+      const qCard = document.getElementById(`q${qNum}`);
+      qCard.querySelectorAll('.quiz-btn').forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove('correct', 'wrong');
+      });
+      const fb = document.getElementById(`fb-${qNum}`);
+      fb.classList.remove('show', 'fb-ok', 'fb-ng');
+      fb.innerHTML = '';
+      document.getElementById(`retry-${qNum}`).classList.remove('show');
+      qCard.querySelector('.quiz-btn').focus();
+    }
+
+    function checkAnswer(qNum, optIdx) {
+      const q = QUIZ_DATA[qNum - 1];
+      const isCorrect = optIdx === q.answer;
       const qCard = document.getElementById(`q${qNum}`);
       const btns = qCard.querySelectorAll('.quiz-btn');
       btns.forEach((btn, idx) => {
         btn.disabled = true;
-        if (idx === optIdx) {
-          btn.classList.add(isCorrect ? 'correct' : 'wrong');
-        }
+        // 選んだ選択肢に正誤を付け、間違えたときは正解の選択肢も示す
+        if (idx === optIdx && !isCorrect) btn.classList.add('wrong');
+        if (idx === q.answer) btn.classList.add('correct');
       });
       const fb = document.getElementById(`fb-${qNum}`);
       fb.classList.add('show', isCorrect ? 'fb-ok' : 'fb-ng');
-      fb.textContent = isCorrect ? quizExplanations[qNum].ok : quizExplanations[qNum].ng;
+      fb.innerHTML = '';
+      const reason = document.createElement('div');
+      reason.textContent = q.feedback[optIdx];
+      const expl = document.createElement('div');
+      expl.textContent = `解説：${q.explanation}`;
+      fb.append(reason, expl);
+      document.getElementById(`retry-${qNum}`).classList.add('show');
     }
+
+    renderQuiz();
 
     /* ==========================================================
        ステップ5 (発展アペンデックス): 温度変化とコック開閉シミュレータ
        ========================================================== */
     const cTemp = document.getElementById('canvas-temp');
-    const ctxTemp = cTemp.getContext('2d');
     let isTempCockOpen = false;
     let tempParticles = [];
 
-    // 左容器: 10 〜 190 (幅180, 体積1.0 L比)
-    // パイプ: 190 〜 230
-    // 右容器: 230 〜 690 (幅460, 体積3.0 L比)
-    const T_LEFT_WALL = 190;
-    const T_RIGHT_WALL = 230;
+    // 左容器: 10 〜 170 (幅160, 体積1.0 L比)
+    // パイプ: 170 〜 210
+    // 右容器: 210 〜 690 (幅480, 体積3.0 L比) → 幅の比 1 : 3 = 体積比
+    const tempVessel = createVessel(cTemp, {
+      leftWall: 170, rightWall: 210, pipeTop: 110, pipeBottom: 160,
+      openLabelY: 75, labelColor: '#475569'
+    });
+    const T_LEFT_WALL = tempVessel.leftWall;
+    const T_RIGHT_WALL = tempVessel.rightWall;
+    // パイプ内の粒子はコック（パイプの中央）より左なら容器1側とみなす
+    const T_VALVE_X = (T_LEFT_WALL + T_RIGHT_WALL) / 2;
 
-    // 初期状態: 基準温度 T0 = 300 K, 初期圧力 P0 = 1.00 atm
+    // 初期状態: 基準温度 T0 = 300 K, 初期圧力 P0 = 1.00×10⁵ Pa
     // V1 = 1.0 L, V2 = 3.0 L
     // 全体粒子数 60個 (初期: 左15個, 右45個)
+    const TEMP_SETUP = { V1: 1.0, V2: 3.0, T0: 300, P0: 1.00 };
+    // 全物質量 × 気体定数 (n全·R = P0·(V1 + V2) / T0) は常に一定
+    const TEMP_NR_TOTAL = TEMP_SETUP.P0 * (TEMP_SETUP.V1 + TEMP_SETUP.V2) / TEMP_SETUP.T0;
     const TOTAL_TEMP_PARTICLES = 60;
-    let n1_closed = 15;
-    let n2_closed = 45;
+    // 容器1にある物質量の割合 n1 / n全（コックを閉じている間は一定）
+    let tempFrac1 = TEMP_SETUP.V1 / (TEMP_SETUP.V1 + TEMP_SETUP.V2);
 
     function initTempParticles(targetN1) {
-      tempParticles = [];
       const currentT1 = parseInt(document.getElementById('slider-t1').value, 10);
       const currentT2 = parseInt(document.getElementById('slider-t2').value, 10);
 
@@ -1688,46 +2006,47 @@
       const spd1 = 2.4 * Math.sqrt(currentT1 / 300);
       const spd2 = 2.4 * Math.sqrt(currentT2 / 300);
 
-      for (let i = 0; i < targetN1; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        tempParticles.push(new Particle('a', 20 + Math.random() * (T_LEFT_WALL - 35), 20 + Math.random() * 230, Math.cos(angle)*spd1, Math.sin(angle)*spd1));
-      }
-      for (let i = 0; i < (TOTAL_TEMP_PARTICLES - targetN1); i++) {
-        const angle = Math.random() * Math.PI * 2;
-        tempParticles.push(new Particle('b', (T_RIGHT_WALL + 15) + Math.random() * (cTemp.width - T_RIGHT_WALL - 30), 20 + Math.random() * 230, Math.cos(angle)*spd2, Math.sin(angle)*spd2));
-      }
+      tempParticles = [
+        ...spawnParticles('single', targetN1, 20, T_LEFT_WALL - 35, 20, 230, spd1),
+        ...spawnParticles('single', TOTAL_TEMP_PARTICLES - targetN1, T_RIGHT_WALL + 15, cTemp.width - T_RIGHT_WALL - 30, 20, 230, spd2)
+      ];
+    }
+
+    // t = T − 273。負の値はマイナス記号「−」で表記する
+    function toCelsiusText(T) {
+      const t = T - 273;
+      return t < 0 ? `−${-t}` : `${t}`;
     }
 
     function calculateTempState() {
       const T1 = parseInt(document.getElementById('slider-t1').value, 10);
       const T2 = parseInt(document.getElementById('slider-t2').value, 10);
 
-      document.getElementById('ctrl-t1-label').textContent = `${T1} K (${T1 - 273} ℃)`;
-      document.getElementById('ctrl-t2-label').textContent = `${T2} K (${T2 - 273} ℃)`;
+      document.getElementById('ctrl-t1-label').textContent = `${T1} K (${toCelsiusText(T1)} ℃)`;
+      document.getElementById('ctrl-t2-label').textContent = `${T2} K (${toCelsiusText(T2)} ℃)`;
 
+      const { V1, V2 } = TEMP_SETUP;
       if (!isTempCockOpen) {
-        // コック閉じ: それぞれ等容変化 (P = P_initial * (T / 300))
-        // n1_closed, n2_closed は固定
-        // 基準初期圧を 1.00 atm とすると:
-        // P1 = 1.00 * (T1 / 300)
-        // P2 = 1.00 * (T2 / 300)
-        const p1 = (1.00 * (T1 / 300)).toFixed(2);
-        const p2 = (1.00 * (T2 / 300)).toFixed(2);
+        // コック閉じ: 各容器の物質量は固定のまま等容変化
+        // P1 = n1·R·T1 / V1,  P2 = n2·R·T2 / V2
+        const n1 = Math.round(TOTAL_TEMP_PARTICLES * tempFrac1);
+        const p1 = (tempFrac1 * TEMP_NR_TOTAL * T1 / V1).toFixed(2);
+        const p2 = ((1 - tempFrac1) * TEMP_NR_TOTAL * T2 / V2).toFixed(2);
 
         document.getElementById('temp-p1-val').textContent = p1;
         document.getElementById('temp-p2-val').textContent = p2;
-        document.getElementById('temp-n1-sub').textContent = `粒子数: ${n1_closed} 個 (${((n1_closed/TOTAL_TEMP_PARTICLES)*100).toFixed(1)}%) [固定]`;
-        document.getElementById('temp-n2-sub').textContent = `粒子数: ${n2_closed} 個 (${((n2_closed/TOTAL_TEMP_PARTICLES)*100).toFixed(1)}%) [固定]`;
+        document.getElementById('temp-n1-sub').textContent = `粒子数: ${n1} 個 (${(tempFrac1 * 100).toFixed(1)}%) [固定]`;
+        document.getElementById('temp-n2-sub').textContent = `粒子数: ${TOTAL_TEMP_PARTICLES - n1} 個 (${((1 - tempFrac1) * 100).toFixed(1)}%) [固定]`;
       } else {
         // コック開き: P1 = P2 = P
-        // n_total * R = 4.0 / 300
-        // P = (4.0 / 300) / ( (1.0 / T1) + (3.0 / T2) )
-        const term1 = 1.0 / T1;
-        const term2 = 3.0 / T2;
-        const pCommon = ((4.0 / 300) / (term1 + term2)).toFixed(2);
+        // n全·R = P·(V1/T1 + V2/T2) より P = n全·R / (V1/T1 + V2/T2)
+        const term1 = V1 / T1;
+        const term2 = V2 / T2;
+        const pCommon = (TEMP_NR_TOTAL / (term1 + term2)).toFixed(2);
 
-        // 各容器の粒子数割合: n1 / n_total = (1.0 / T1) / ( (1.0 / T1) + (3.0 / T2) )
+        // 各容器の物質量の割合: n1 / n全 = (V1/T1) / (V1/T1 + V2/T2)
         const ratio1 = term1 / (term1 + term2);
+        tempFrac1 = ratio1;
         const targetN1 = Math.round(TOTAL_TEMP_PARTICLES * ratio1);
 
         document.getElementById('temp-p1-val').textContent = pCommon;
@@ -1735,35 +2054,126 @@
         document.getElementById('temp-n1-sub').textContent = `粒子数: ${targetN1} 個 (${(ratio1 * 100).toFixed(1)}%) [平衡]`;
         document.getElementById('temp-n2-sub').textContent = `粒子数: ${TOTAL_TEMP_PARTICLES - targetN1} 個 (${((1 - ratio1) * 100).toFixed(1)}%) [平衡]`;
 
-        // 粒子の移動を反映
-        if (Math.abs(countLeftParticles() - targetN1) > 2) {
-          initTempParticles(targetN1);
-        }
+        // 粒子はこの目標数に向かってパイプを通って少しずつ移動する（flowTowardTarget）
+        tempTargetN1 = targetN1;
       }
+    }
 
-      // 粒子の速度を温度に合わせて調整
+    // 粒子の速さを、いま居る容器の温度に合わせる（v ∝ √T）。容器を移った粒子もその容器の温度の速さになる
+    function matchTempSpeeds(T1, T2) {
       const spd1 = 2.4 * Math.sqrt(T1 / 300);
       const spd2 = 2.4 * Math.sqrt(T2 / 300);
       tempParticles.forEach(p => {
         const curSpd = Math.hypot(p.vx, p.vy) || 1;
-        const targetSpd = (p.x < T_LEFT_WALL) ? spd1 : spd2;
+        const targetSpd = (p.x < T_VALVE_X) ? spd1 : spd2;
         p.vx = (p.vx / curSpd) * targetSpd;
         p.vy = (p.vy / curSpd) * targetSpd;
       });
     }
 
     function countLeftParticles() {
-      return tempParticles.filter(p => p.x < T_LEFT_WALL).length;
+      return tempParticles.filter(p => p.x < T_VALVE_X).length;
     }
+
+    /* コックが開いているとき、容器1の粒子数を平衡の目標数に近づける。
+       全粒子を作り直すと瞬間移動に見えるため、多すぎる側でパイプの口に近い粒子を1個ずつ選び、
+       口に向けて進ませて実際にパイプを通って移らせる。
+       （粒子の運動だけに任せると、細い穴を通る分子の性質で n ∝ 1/√T に近づき、
+         高校で扱う P1 = P2 の平衡と合わないため、目標数は状態方程式から決める） */
+    let tempTargetN1 = 15;
+    let tempFlowFrame = 0;
+    const FLOW_INTERVAL = 5;      // 何フレームごとに1個送り出すか
+    const FLOW_TIMEOUT = 240;     // 送り出した粒子の追跡をやめるまでのフレーム数
+
+    function flowTowardTarget() {
+      const v = tempVessel;
+      // 送り出し中の粒子: コックを越えたか、時間切れなら追跡をやめる
+      let pendingToRight = 0, pendingToLeft = 0;
+      tempParticles.forEach(p => {
+        if (!p.flowTo) return;
+        p.flowAge++;
+        const arrived = (p.flowTo === 'right') ? p.x >= T_VALVE_X : p.x < T_VALVE_X;
+        if (arrived || p.flowAge > FLOW_TIMEOUT) { p.flowTo = null; return; }
+        if (p.flowTo === 'right') pendingToRight++; else pendingToLeft++;
+      });
+
+      tempFlowFrame++;
+      if (tempFlowFrame % FLOW_INTERVAL !== 0) return;
+
+      const expectedLeft = countLeftParticles() - pendingToRight + pendingToLeft;
+      const diff = expectedLeft - tempTargetN1;
+      if (diff === 0) return;
+
+      const fromLeft = diff > 0;
+      const mouthX = fromLeft ? T_LEFT_WALL : T_RIGHT_WALL;
+      const pipeMid = (v.pipeTop + v.pipeBottom) / 2;
+      // 口に近く、かつ口を見込む角度が急すぎない（壁に当たらず口に入れる）粒子を優先する
+      let best = null, bestScore = Infinity;
+      tempParticles.forEach(p => {
+        if (p.flowTo) return;
+        const onSide = fromLeft ? p.x <= T_LEFT_WALL : p.x >= T_RIGHT_WALL;
+        if (!onSide) return;
+        const dx = Math.abs(p.x - mouthX), dy = Math.abs(p.y - pipeMid);
+        const score = Math.hypot(dx, dy) + (dy > 2 * dx ? 1000 : 0);
+        if (score < bestScore) { bestScore = score; best = p; }
+      });
+      if (!best) return;
+
+      // パイプの口（高さは中央付近でばらつかせる）に向けて、速さはそのままで向きだけ変える
+      const aimY = pipeMid + (Math.random() - 0.5) * 16;
+      const aimX = mouthX;
+      const spd = Math.hypot(best.vx, best.vy) || 1;
+      const dist = Math.hypot(aimX - best.x, aimY - best.y) || 1;
+      best.vx = (aimX - best.x) / dist * spd;
+      best.vy = (aimY - best.y) / dist * spd;
+      best.flowTo = fromLeft ? 'right' : 'left';
+      best.flowAge = 0;
+    }
+
+    function clearTempFlow() {
+      tempParticles.forEach(p => { p.flowTo = null; });
+    }
+
+    // ステップ5の予想: 容器1だけを冷やしてコックを開くと、容器1の物質量の割合はどうなるか
+    const PREDICT_T1 = 150, PREDICT_T2 = 300;
+    const tempPrediction = (() => {
+      const { V1, V2 } = TEMP_SETUP;
+      const frac0 = V1 / (V1 + V2);
+      const frac = (V1 / PREDICT_T1) / (V1 / PREDICT_T1 + V2 / PREDICT_T2);
+      const pct = x => (x * 100).toFixed(0);
+      return createPrediction('predict-temp', {
+        question: `容器1だけを ${PREDICT_T1} K に冷やし（容器2は ${PREDICT_T2} K のまま）、コックを開いて十分に時間がたつと、容器1にある分子の割合（はじめは ${pct(frac0)}%）はどうなるでしょうか？`,
+        options: ['増える', '減る', '変わらない'],
+        answer: 0,
+        feedback: [
+          '🎉 予想どおり！',
+          '残念！冷やすと分子の運動は穏やかになりますが、そのぶん同じ圧力を生み出すのにたくさんの分子が必要になるので、冷たい容器1に分子が集まります。',
+          '残念！コックが開いていると両方の容器の圧力が等しくなるように分子が移動するので、温度が違えば分子の割合は変わります。'
+        ],
+        explanation: `コックを開くと P1 = P2 となり、n = PV / RT より各容器の物質量は V / T に比例します。n1 : n2 = ${V1.toFixed(1)}/${PREDICT_T1} : ${V2.toFixed(1)}/${PREDICT_T2} なので、容器1の割合は ${pct(frac0)}% から ${pct(frac)}% に増えます。`,
+        prompt: '予想を決めたら「この条件で確かめる」を押そう！',
+        skippedMessage: ''
+      });
+    })();
+    tempPrediction.checkBtn.addEventListener('click', () => {
+      document.getElementById('slider-t1').value = PREDICT_T1;
+      document.getElementById('slider-t2').value = PREDICT_T2;
+      if (!isTempCockOpen) {
+        document.getElementById('btn-temp-cock-toggle').click();
+      } else {
+        calculateTempState();
+      }
+      tempPrediction.reveal();
+    });
 
     function resetTempSim() {
       isTempCockOpen = false;
+      tempPrediction.reset();
       document.getElementById('slider-t1').value = 300;
       document.getElementById('slider-t2').value = 300;
       document.getElementById('btn-temp-cock-toggle').innerHTML = '🚪 コックを開く（連通状態にする）';
-      n1_closed = 15;
-      n2_closed = 45;
-      initTempParticles(15);
+      tempFrac1 = TEMP_SETUP.V1 / (TEMP_SETUP.V1 + TEMP_SETUP.V2);
+      initTempParticles(Math.round(TOTAL_TEMP_PARTICLES * tempFrac1));
       calculateTempState();
     }
 
@@ -1772,13 +2182,12 @@
 
     document.getElementById('btn-temp-cock-toggle').addEventListener('click', () => {
       isTempCockOpen = !isTempCockOpen;
+      clearTempFlow();
       if (isTempCockOpen) {
         document.getElementById('btn-temp-cock-toggle').innerHTML = '🔒 コックを閉じる';
       } else {
         document.getElementById('btn-temp-cock-toggle').innerHTML = '🚪 コックを開く（連通状態にする）';
-        // 閉じた時点の粒子数を固定
-        n1_closed = countLeftParticles();
-        n2_closed = TOTAL_TEMP_PARTICLES - n1_closed;
+        // 閉じた時点の物質量の割合（開いていたときの平衡値 tempFrac1）をそのまま固定する
       }
       calculateTempState();
     });
@@ -1786,42 +2195,8 @@
     document.getElementById('btn-temp-reset').addEventListener('click', resetTempSim);
     resetTempSim();
 
-    function updateTempParticle(p) {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      // 外壁
-      if (p.x - p.radius < 10) { p.x = 10 + p.radius; p.vx *= -1; }
-      if (p.x + p.radius > cTemp.width - 10) { p.x = cTemp.width - 10 - p.radius; p.vx *= -1; }
-      if (p.y - p.radius < 10) { p.y = 10 + p.radius; p.vy *= -1; }
-      if (p.y + p.radius > cTemp.height - 10) { p.y = cTemp.height - 10 - p.radius; p.vy *= -1; }
-
-      // パイプ部 (y: 110〜160)
-      const inPipeY = (p.y > 110 && p.y < 160);
-
-      if (!isTempCockOpen) {
-        if (p.x < T_LEFT_WALL && p.x + p.radius >= T_LEFT_WALL) {
-          p.x = T_LEFT_WALL - p.radius;
-          p.vx *= -1;
-        } else if (p.x > T_RIGHT_WALL && p.x - p.radius <= T_RIGHT_WALL) {
-          p.x = T_RIGHT_WALL + p.radius;
-          p.vx *= -1;
-        }
-      } else {
-        if (!inPipeY) {
-          if (p.x < T_LEFT_WALL && p.x + p.radius >= T_LEFT_WALL) {
-            p.x = T_LEFT_WALL - p.radius;
-            p.vx *= -1;
-          } else if (p.x > T_RIGHT_WALL && p.x - p.radius <= T_RIGHT_WALL) {
-            p.x = T_RIGHT_WALL + p.radius;
-            p.vx *= -1;
-          }
-        }
-      }
-    }
-
     function loopTemp() {
-      ctxTemp.clearRect(0, 0, cTemp.width, cTemp.height);
+      tempVessel.ctx.clearRect(0, 0, cTemp.width, cTemp.height);
 
       const T1 = parseInt(document.getElementById('slider-t1').value, 10);
       const T2 = parseInt(document.getElementById('slider-t2').value, 10);
@@ -1837,64 +2212,18 @@
         }
       };
 
-      ctxTemp.save();
-      // 容器1 背景色
-      ctxTemp.fillStyle = getTempBg(T1);
-      ctxTemp.fillRect(10, 10, T_LEFT_WALL - 10, cTemp.height - 20);
+      drawVessel(tempVessel, isTempCockOpen,
+        [`容器1 (1.0 L, ${T1} K)`, `容器2 (3.0 L, ${T2} K)`],
+        [getTempBg(T1), getTempBg(T2)]);
 
-      // 容器2 背景色
-      ctxTemp.fillStyle = getTempBg(T2);
-      ctxTemp.fillRect(T_RIGHT_WALL, 10, cTemp.width - T_RIGHT_WALL - 10, cTemp.height - 20);
-
-      // 外枠
-      ctxTemp.strokeStyle = '#94a3b8';
-      ctxTemp.lineWidth = 3;
-      ctxTemp.strokeRect(10, 10, T_LEFT_WALL - 10, cTemp.height - 20);
-      ctxTemp.strokeRect(T_RIGHT_WALL, 10, cTemp.width - T_RIGHT_WALL - 10, cTemp.height - 20);
-
-      // パイプ連結部
-      ctxTemp.beginPath();
-      ctxTemp.moveTo(T_LEFT_WALL, 110);
-      ctxTemp.lineTo(T_RIGHT_WALL, 110);
-      ctxTemp.moveTo(T_LEFT_WALL, 160);
-      ctxTemp.lineTo(T_RIGHT_WALL, 160);
-      ctxTemp.stroke();
-
-      // コック弁
-      const valveX = (T_LEFT_WALL + T_RIGHT_WALL) / 2;
-      if (!isTempCockOpen) {
-        ctxTemp.fillStyle = '#ef4444';
-        ctxTemp.fillRect(valveX - 4, 100, 8, 70);
-        ctxTemp.fillStyle = '#0f172a';
-        ctxTemp.font = 'bold 12px "Noto Sans JP"';
-        ctxTemp.textAlign = 'center';
-        ctxTemp.fillText('コック [閉]', valveX, 90);
-      } else {
-        ctxTemp.fillStyle = '#10b981';
-        ctxTemp.fillRect(valveX - 4, 85, 8, 15);
-        ctxTemp.fillStyle = '#10b981';
-        ctxTemp.font = 'bold 12px "Noto Sans JP"';
-        ctxTemp.textAlign = 'center';
-        ctxTemp.fillText('コック [開]', valveX, 75);
-      }
-
-      // 容器ラベル
-      ctxTemp.fillStyle = '#475569';
-      ctxTemp.font = 'bold 13px "Noto Sans JP"';
-      ctxTemp.textAlign = 'center';
-      ctxTemp.fillText(`容器1 (1.0 L, ${T1} K)`, (10 + T_LEFT_WALL) / 2, cTemp.height - 18);
-      ctxTemp.fillText(`容器2 (3.0 L, ${T2} K)`, (T_RIGHT_WALL + cTemp.width - 10) / 2, cTemp.height - 18);
-
-      ctxTemp.restore();
-
+      matchTempSpeeds(T1, T2);
+      if (isTempCockOpen) flowTowardTarget();
       tempParticles.forEach(p => {
-        updateTempParticle(p);
-        p.draw(ctxTemp, 'both');
+        updateVesselParticle(p, tempVessel, isTempCockOpen);
+        p.draw(tempVessel.ctx, 'both');
       });
-
-      requestAnimationFrame(loopTemp);
     }
-    loopTemp();
+    runWhenVisible(cTemp, loopTemp);
   </script>
 </body>
 </html>
