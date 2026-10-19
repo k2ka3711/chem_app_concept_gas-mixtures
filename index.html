@@ -761,7 +761,7 @@
           <span>👀</span> 気体Aと気体Bが同居する世界
         </h2>
         <p class="card-desc">
-          ひとつの容器に、青い気体（気体A）と赤い気体（気体B）が入っています。<br>
+          ひとつの容器に、青色の気体（気体A）と赤橙色の気体（気体B）が入っています。<br>
           下の切り替えボタンを押して、それぞれの気体が壁を押す「手ごたえ（分圧）」を観察してみましょう。
         </p>
 
@@ -812,7 +812,7 @@
         <div class="filter-btn-group">
           <button class="filter-btn active" data-view="both">👥 2つの気体を同時に見る</button>
           <button class="filter-btn" data-view="only-a">🔵 気体Aだけに注目</button>
-          <button class="filter-btn" data-view="only-b">🔴 気体Bだけに注目</button>
+          <button class="filter-btn" data-view="only-b">🟠 気体Bだけに注目</button>
         </div>
 
         <div class="insight-box">
@@ -896,14 +896,14 @@
             <div class="control-item">
               <div class="control-label">
                 <span>気体Aの粒子数 (nA)</span>
-                <span class="c-a" id="ctrl-na-label">30 粒 (0.60 mol)</span>
+                <span class="c-a" id="ctrl-na-label">30 個 (0.60 mol)</span>
               </div>
               <input type="range" id="slider-na" min="10" max="50" step="5" value="30">
             </div>
             <div class="control-item">
               <div class="control-label">
                 <span>気体Bの粒子数 (nB)</span>
-                <span class="c-b" id="ctrl-nb-label">20 粒 (0.40 mol)</span>
+                <span class="c-b" id="ctrl-nb-label">20 個 (0.40 mol)</span>
               </div>
               <input type="range" id="slider-nb" min="0" max="50" step="5" value="20">
             </div>
@@ -1048,7 +1048,7 @@
         </p>
 
         <div class="formula-board">
-          <div class="formula-title">Dalton's Laws & State Equations</div>
+          <div class="formula-title">分圧の法則と状態方程式</div>
           <div class="formula-row">
             <span class="formula-name">ドルトンの分圧の法則</span>
             <span class="formula-math f-tot">P = pA + pB + …</span>
@@ -1489,8 +1489,8 @@
     function updateDaltonUI() {
       const na = parseInt(sliderNa.value, 10);
       const nb = parseInt(sliderNb.value, 10);
-      document.getElementById('ctrl-na-label').textContent = `${na} 粒 (${(na * 0.02).toFixed(2)} mol)`;
-      document.getElementById('ctrl-nb-label').textContent = `${nb} 粒 (${(nb * 0.02).toFixed(2)} mol)`;
+      document.getElementById('ctrl-na-label').textContent = `${na} 個 (${(na * 0.02).toFixed(2)} mol)`;
+      document.getElementById('ctrl-nb-label').textContent = `${nb} 個 (${(nb * 0.02).toFixed(2)} mol)`;
 
       const pa = (na * 0.02).toFixed(2);
       const pb = (nb * 0.02).toFixed(2);
@@ -1786,12 +1786,18 @@
       ];
     }
 
+    // t = T − 273。負の値はマイナス記号「−」で表記する
+    function toCelsiusText(T) {
+      const t = T - 273;
+      return t < 0 ? `−${-t}` : `${t}`;
+    }
+
     function calculateTempState() {
       const T1 = parseInt(document.getElementById('slider-t1').value, 10);
       const T2 = parseInt(document.getElementById('slider-t2').value, 10);
 
-      document.getElementById('ctrl-t1-label').textContent = `${T1} K (${T1 - 273} ℃)`;
-      document.getElementById('ctrl-t2-label').textContent = `${T2} K (${T2 - 273} ℃)`;
+      document.getElementById('ctrl-t1-label').textContent = `${T1} K (${toCelsiusText(T1)} ℃)`;
+      document.getElementById('ctrl-t2-label').textContent = `${T2} K (${toCelsiusText(T2)} ℃)`;
 
       const { V1, V2 } = TEMP_SETUP;
       if (!isTempCockOpen) {
