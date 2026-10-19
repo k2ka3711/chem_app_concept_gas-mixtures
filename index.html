@@ -515,6 +515,68 @@
       color: var(--ink);
     }
 
+    /* 予想 → 観察 → 説明（実験③・ステップ5） */
+    .predict-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .predict-title {
+      display: block;
+      color: #b45309;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .predict-q {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+    .predict-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .predict-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .predict-btn:hover:not(:disabled) { background: #f1f5f9; }
+    .predict-btn.selected { border-color: #f59e0b; background: #fef3c7; }
+    .predict-btn.correct { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+    .predict-btn.wrong { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+    .predict-btn.correct::after { content: ' ✓ 正解'; }
+    .predict-btn.wrong::after { content: ' ✗ あなたの予想'; }
+    .predict-check {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      background: white;
+      border: 1.5px solid #f59e0b;
+      border-radius: 999px;
+      color: #b45309;
+      cursor: pointer;
+    }
+    .predict-check.show { display: inline-block; }
+    .predict-result {
+      font-size: 13px;
+      margin-top: 10px;
+      line-height: 1.7;
+    }
+    .predict-result:empty { display: none; }
+
     /* ステップ3の公式ボード */
     .formula-board {
       background: linear-gradient(135deg, #1e1b4b, #312e81);
@@ -1007,6 +1069,13 @@
             <canvas id="canvas-cock" width="700" height="260"></canvas>
           </div>
 
+          <div class="predict-box" id="predict-cock">
+            <strong class="predict-title">🤔 まず予想しよう</strong>
+            <div class="predict-q"></div>
+            <div class="predict-options"></div>
+            <div class="predict-result"></div>
+          </div>
+
           <div class="cock-controls">
             <button class="cock-btn cock-btn-primary" id="btn-cock-toggle">
               🚪 コックを開く（混合スタート）
@@ -1156,6 +1225,14 @@
 
         <div class="canvas-box" style="margin-bottom: 16px;">
           <canvas id="canvas-temp" width="700" height="270"></canvas>
+        </div>
+
+        <div class="predict-box" id="predict-temp">
+          <strong class="predict-title">🤔 まず予想しよう</strong>
+          <div class="predict-q"></div>
+          <div class="predict-options"></div>
+          <button class="predict-check">▶ この条件で確かめる</button>
+          <div class="predict-result"></div>
         </div>
 
         <!-- コック操作ボタン -->
@@ -1337,6 +1414,72 @@
         requestAnimationFrame(tick);
       }
       tick();
+    }
+
+    /* 予想 → 観察 → 説明: 実験の前に予想を選ばせ、結果が出たら照らし合わせる
+       data: { question, options, answer, feedback[選択肢ごと], explanation,
+               prompt（予想を選んだ後の案内）, skippedMessage（予想せずに結果を見たときの案内） } */
+    function createPrediction(rootId, data) {
+      const root = document.getElementById(rootId);
+      const optsBox = root.querySelector('.predict-options');
+      const result = root.querySelector('.predict-result');
+      const checkBtn = root.querySelector('.predict-check');
+      const state = { choice: null, revealed: false };
+      root.querySelector('.predict-q').innerHTML = data.question;
+
+      const btns = data.options.map((label, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'predict-btn';
+        btn.textContent = label;
+        btn.addEventListener('click', () => {
+          if (state.revealed) return;
+          state.choice = idx;
+          btns.forEach((b, i) => b.classList.toggle('selected', i === idx));
+          result.textContent = data.prompt;
+          if (checkBtn) checkBtn.classList.add('show');
+        });
+        optsBox.appendChild(btn);
+        return btn;
+      });
+
+      return {
+        checkBtn,
+        // 予想が選ばれていれば答え合わせをする
+        reveal() {
+          if (state.revealed) return;
+          state.revealed = true;
+          if (state.choice === null) {
+            // 予想せずに結果を見た場合は、予想の選択を締め切ってやり直し方を案内する
+            btns.forEach(b => { b.disabled = true; });
+            if (checkBtn) checkBtn.classList.remove('show');
+            result.textContent = data.skippedMessage;
+            return;
+          }
+          btns.forEach((b, i) => {
+            b.disabled = true;
+            b.classList.remove('selected');
+            if (i === state.choice && i !== data.answer) b.classList.add('wrong');
+            if (i === data.answer) b.classList.add('correct');
+          });
+          if (checkBtn) checkBtn.classList.remove('show');
+          result.innerHTML = '';
+          const reason = document.createElement('div');
+          reason.textContent = data.feedback[state.choice];
+          const expl = document.createElement('div');
+          expl.textContent = `解説：${data.explanation}`;
+          result.append(reason, expl);
+        },
+        reset() {
+          state.choice = null;
+          state.revealed = false;
+          btns.forEach(b => {
+            b.disabled = false;
+            b.classList.remove('selected', 'correct', 'wrong');
+          });
+          if (checkBtn) checkBtn.classList.remove('show');
+          result.textContent = '';
+        }
+      };
     }
 
     // 指定範囲にランダムな位置・向きで粒子を生成する（speed は数値または毎回呼ぶ関数）
@@ -1637,9 +1780,30 @@
       return `${a / g}/${b / g}`;
     }
 
+    // 実験③の予想（選択肢: 単純な和・単純な平均・正しい全圧）
+    const cockPrediction = (() => {
+      const { V1, V2, PA0, PB0 } = COCK_SETUP;
+      const m = calcCockMixed();
+      const u = ' atm';
+      return createPrediction('predict-cock', {
+        question: `コックを開けて十分に時間がたつと、容器全体の全圧はいくらになるでしょうか？`,
+        options: [fmtCockP(PA0 + PB0) + u, fmtCockP((PA0 + PB0) / 2) + u, fmtCockP(m.ptot) + u],
+        answer: 2,
+        feedback: [
+          `残念！${fmtCockP(PA0 + PB0)}${u} は、混合前の圧力をそのまま足した値です。各気体は全体の体積に広がるので、分圧は混合前より小さくなります。`,
+          `残念！${fmtCockP((PA0 + PB0) / 2)}${u} は、2つの圧力の単純な平均です。容器の体積が違うので、単純な平均にはなりません。`,
+          '🎉 予想どおり！'
+        ],
+        explanation: `各気体は全体の ${fmtCockV(m.Vt)} L に広がります。ボイルの法則より pA = ${fmtCockP(PA0)} × ${volumeFraction(V1, m.Vt)} = ${fmtCockP(m.pa)}${u}、pB = ${fmtCockP(PB0)} × ${volumeFraction(V2, m.Vt)} = ${fmtCockP(m.pb)}${u}。全圧はその和で ${fmtCockP(m.ptot)}${u} です。`,
+        prompt: '予想を決めたら、コックを開いて確かめよう！',
+        skippedMessage: '予想する前にコックを開けました。「最初に戻す」を押すと、予想からやり直せます。'
+      });
+    })();
+
     function resetCockSim() {
       const { V1, V2, PA0, PB0, totalParticles } = COCK_SETUP;
       isCockOpen = false;
+      cockPrediction.reset();
       document.getElementById('btn-cock-toggle').innerHTML = '🚪 コックを開く（混合スタート）';
       document.getElementById('cock-pa-val').textContent = fmtCockP(PA0);
       document.getElementById('cock-pb-val').textContent = fmtCockP(PB0);
@@ -1664,6 +1828,7 @@
       isCockOpen = !isCockOpen;
       if (isCockOpen) {
         document.getElementById('btn-cock-toggle').innerHTML = '🔒 コックを閉じる';
+        cockPrediction.reveal();
         const { V1, V2, PA0, PB0 } = COCK_SETUP;
         const m = calcCockMixed();
         document.getElementById('cock-pa-val').textContent = fmtCockP(m.pa);
@@ -1966,8 +2131,41 @@
       tempParticles.forEach(p => { p.flowTo = null; });
     }
 
+    // ステップ5の予想: 容器1だけを冷やしてコックを開くと、容器1の物質量の割合はどうなるか
+    const PREDICT_T1 = 150, PREDICT_T2 = 300;
+    const tempPrediction = (() => {
+      const { V1, V2 } = TEMP_SETUP;
+      const frac0 = V1 / (V1 + V2);
+      const frac = (V1 / PREDICT_T1) / (V1 / PREDICT_T1 + V2 / PREDICT_T2);
+      const pct = x => (x * 100).toFixed(0);
+      return createPrediction('predict-temp', {
+        question: `容器1だけを ${PREDICT_T1} K に冷やし（容器2は ${PREDICT_T2} K のまま）、コックを開いて十分に時間がたつと、容器1にある分子の割合（はじめは ${pct(frac0)}%）はどうなるでしょうか？`,
+        options: ['増える', '減る', '変わらない'],
+        answer: 0,
+        feedback: [
+          '🎉 予想どおり！',
+          '残念！冷やすと分子の運動は穏やかになりますが、そのぶん同じ圧力を生み出すのにたくさんの分子が必要になるので、冷たい容器1に分子が集まります。',
+          '残念！コックが開いていると両方の容器の圧力が等しくなるように分子が移動するので、温度が違えば分子の割合は変わります。'
+        ],
+        explanation: `コックを開くと P1 = P2 となり、n = PV / RT より各容器の物質量は V / T に比例します。n1 : n2 = ${V1.toFixed(1)}/${PREDICT_T1} : ${V2.toFixed(1)}/${PREDICT_T2} なので、容器1の割合は ${pct(frac0)}% から ${pct(frac)}% に増えます。`,
+        prompt: '予想を決めたら「この条件で確かめる」を押そう！',
+        skippedMessage: ''
+      });
+    })();
+    tempPrediction.checkBtn.addEventListener('click', () => {
+      document.getElementById('slider-t1').value = PREDICT_T1;
+      document.getElementById('slider-t2').value = PREDICT_T2;
+      if (!isTempCockOpen) {
+        document.getElementById('btn-temp-cock-toggle').click();
+      } else {
+        calculateTempState();
+      }
+      tempPrediction.reveal();
+    });
+
     function resetTempSim() {
       isTempCockOpen = false;
+      tempPrediction.reset();
       document.getElementById('slider-t1').value = 300;
       document.getElementById('slider-t2').value = 300;
       document.getElementById('btn-temp-cock-toggle').innerHTML = '🚪 コックを開く（連通状態にする）';
