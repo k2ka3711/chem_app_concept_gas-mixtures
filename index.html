@@ -1278,6 +1278,15 @@
       }
     }
 
+    // 表示中の canvas だけを毎フレーム更新する（非表示のステップ・実験では処理を止めて電池消費を抑える）
+    function runWhenVisible(canvas, frame) {
+      function tick() {
+        if (canvas.offsetParent !== null) frame();
+        requestAnimationFrame(tick);
+      }
+      tick();
+    }
+
     // 指定範囲にランダムな位置・向きで粒子を生成する（speed は数値または毎回呼ぶ関数）
     function spawnParticles(type, count, x0, w, y0, h, speed) {
       const list = [];
@@ -1414,9 +1423,8 @@
         p.update(c1.width, c1.height);
         p.draw(ctx1, viewFilter);
       });
-      requestAnimationFrame(loopStep1);
     }
-    loopStep1();
+    runWhenVisible(c1, loopStep1);
 
     /* ==========================================================
        ステップ2 実験①: ドルトンの法則 (スライダー連動)
@@ -1468,9 +1476,8 @@
         p.update(cDalton.width, cDalton.height);
         p.draw(ctxDalton, 'both');
       });
-      requestAnimationFrame(loopDalton);
     }
-    loopDalton();
+    runWhenVisible(cDalton, loopDalton);
 
     /* ==========================================================
        ステップ2 実験②: モル分率
@@ -1510,9 +1517,8 @@
         p.update(cMole.width, cMole.height);
         p.draw(ctxMole, 'both');
       });
-      requestAnimationFrame(loopMole);
     }
-    loopMole();
+    runWhenVisible(cMole, loopMole);
 
     /* ==========================================================
        ステップ2 実験③: コックを開けて混合シミュレータ (1.0 L & 3.0 L)
@@ -1600,10 +1606,8 @@
         updateVesselParticle(p, cockVessel, isCockOpen);
         p.draw(cockVessel.ctx, 'both');
       });
-
-      requestAnimationFrame(loopCock);
     }
-    loopCock();
+    runWhenVisible(cCock, loopCock);
 
     /* ==========================================================
        ステップ4: クイズ判定ロジック
@@ -1830,10 +1834,8 @@
         updateVesselParticle(p, tempVessel, isTempCockOpen);
         p.draw(tempVessel.ctx, 'both');
       });
-
-      requestAnimationFrame(loopTemp);
     }
-    loopTemp();
+    runWhenVisible(cTemp, loopTemp);
   </script>
 </body>
 </html>
