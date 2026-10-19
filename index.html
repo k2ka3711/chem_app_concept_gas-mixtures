@@ -1703,9 +1703,12 @@
     // 初期状態: 基準温度 T0 = 300 K, 初期圧力 P0 = 1.00 atm
     // V1 = 1.0 L, V2 = 3.0 L
     // 全体粒子数 60個 (初期: 左15個, 右45個)
+    const TEMP_SETUP = { V1: 1.0, V2: 3.0, T0: 300, P0: 1.00 };
+    // 全物質量 × 気体定数 (n全·R = P0·(V1 + V2) / T0) は常に一定
+    const TEMP_NR_TOTAL = TEMP_SETUP.P0 * (TEMP_SETUP.V1 + TEMP_SETUP.V2) / TEMP_SETUP.T0;
     const TOTAL_TEMP_PARTICLES = 60;
-    let n1_closed = 15;
-    let n2_closed = 45;
+    // 容器1にある物質量の割合 n1 / n全（コックを閉じている間は一定）
+    let tempFrac1 = TEMP_SETUP.V1 / (TEMP_SETUP.V1 + TEMP_SETUP.V2);
 
     function initTempParticles(targetN1) {
       const currentT1 = parseInt(document.getElementById('slider-t1').value, 10);
@@ -1728,29 +1731,28 @@
       document.getElementById('ctrl-t1-label').textContent = `${T1} K (${T1 - 273} ℃)`;
       document.getElementById('ctrl-t2-label').textContent = `${T2} K (${T2 - 273} ℃)`;
 
+      const { V1, V2 } = TEMP_SETUP;
       if (!isTempCockOpen) {
-        // コック閉じ: それぞれ等容変化 (P = P_initial * (T / 300))
-        // n1_closed, n2_closed は固定
-        // 基準初期圧を 1.00 atm とすると:
-        // P1 = 1.00 * (T1 / 300)
-        // P2 = 1.00 * (T2 / 300)
-        const p1 = (1.00 * (T1 / 300)).toFixed(2);
-        const p2 = (1.00 * (T2 / 300)).toFixed(2);
+        // コック閉じ: 各容器の物質量は固定のまま等容変化
+        // P1 = n1·R·T1 / V1,  P2 = n2·R·T2 / V2
+        const n1 = Math.round(TOTAL_TEMP_PARTICLES * tempFrac1);
+        const p1 = (tempFrac1 * TEMP_NR_TOTAL * T1 / V1).toFixed(2);
+        const p2 = ((1 - tempFrac1) * TEMP_NR_TOTAL * T2 / V2).toFixed(2);
 
         document.getElementById('temp-p1-val').textContent = p1;
         document.getElementById('temp-p2-val').textContent = p2;
-        document.getElementById('temp-n1-sub').textContent = `粒子数: ${n1_closed} 個 (${((n1_closed/TOTAL_TEMP_PARTICLES)*100).toFixed(1)}%) [固定]`;
-        document.getElementById('temp-n2-sub').textContent = `粒子数: ${n2_closed} 個 (${((n2_closed/TOTAL_TEMP_PARTICLES)*100).toFixed(1)}%) [固定]`;
+        document.getElementById('temp-n1-sub').textContent = `粒子数: ${n1} 個 (${(tempFrac1 * 100).toFixed(1)}%) [固定]`;
+        document.getElementById('temp-n2-sub').textContent = `粒子数: ${TOTAL_TEMP_PARTICLES - n1} 個 (${((1 - tempFrac1) * 100).toFixed(1)}%) [固定]`;
       } else {
         // コック開き: P1 = P2 = P
-        // n_total * R = 4.0 / 300
-        // P = (4.0 / 300) / ( (1.0 / T1) + (3.0 / T2) )
-        const term1 = 1.0 / T1;
-        const term2 = 3.0 / T2;
-        const pCommon = ((4.0 / 300) / (term1 + term2)).toFixed(2);
+        // n全·R = P·(V1/T1 + V2/T2) より P = n全·R / (V1/T1 + V2/T2)
+        const term1 = V1 / T1;
+        const term2 = V2 / T2;
+        const pCommon = (TEMP_NR_TOTAL / (term1 + term2)).toFixed(2);
 
-        // 各容器の粒子数割合: n1 / n_total = (1.0 / T1) / ( (1.0 / T1) + (3.0 / T2) )
+        // 各容器の物質量の割合: n1 / n全 = (V1/T1) / (V1/T1 + V2/T2)
         const ratio1 = term1 / (term1 + term2);
+        tempFrac1 = ratio1;
         const targetN1 = Math.round(TOTAL_TEMP_PARTICLES * ratio1);
 
         document.getElementById('temp-p1-val').textContent = pCommon;
@@ -1784,9 +1786,8 @@
       document.getElementById('slider-t1').value = 300;
       document.getElementById('slider-t2').value = 300;
       document.getElementById('btn-temp-cock-toggle').innerHTML = '🚪 コックを開く（連通状態にする）';
-      n1_closed = 15;
-      n2_closed = 45;
-      initTempParticles(15);
+      tempFrac1 = TEMP_SETUP.V1 / (TEMP_SETUP.V1 + TEMP_SETUP.V2);
+      initTempParticles(Math.round(TOTAL_TEMP_PARTICLES * tempFrac1));
       calculateTempState();
     }
 
@@ -1799,9 +1800,7 @@
         document.getElementById('btn-temp-cock-toggle').innerHTML = '🔒 コックを閉じる';
       } else {
         document.getElementById('btn-temp-cock-toggle').innerHTML = '🚪 コックを開く（連通状態にする）';
-        // 閉じた時点の粒子数を固定
-        n1_closed = countLeftParticles();
-        n2_closed = TOTAL_TEMP_PARTICLES - n1_closed;
+        // 閉じた時点の物質量の割合（開いていたときの平衡値 tempFrac1）をそのまま固定する
       }
       calculateTempState();
     });
