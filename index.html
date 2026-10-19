@@ -662,6 +662,20 @@
     }
     .quiz-feedback.show { display: block; }
     .fb-ok { background: #d1fae5; color: #065f46; }
+    .quiz-retry {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .quiz-retry:hover { background: #f1f5f9; color: var(--ink); }
+    .quiz-retry.show { display: inline-block; }
     .fb-ng { background: #fee2e2; color: #991b1b; }
 
     /* ナビゲーションバー（次へ・戻る） */
@@ -1735,7 +1749,8 @@
           <span class="quiz-num">第 ${qNum} 問</span>
           <div class="quiz-q">${q.question}</div>
           <div class="quiz-options"></div>
-          <div class="quiz-feedback" id="fb-${qNum}"></div>`;
+          <div class="quiz-feedback" id="fb-${qNum}"></div>
+          <button class="quiz-retry" id="retry-${qNum}">🔄 もう一度解く</button>`;
         const opts = card.querySelector('.quiz-options');
         q.options.forEach((label, optIdx) => {
           const btn = document.createElement('button');
@@ -1744,8 +1759,22 @@
           btn.addEventListener('click', () => checkAnswer(qNum, optIdx));
           opts.appendChild(btn);
         });
+        card.querySelector('.quiz-retry').addEventListener('click', () => resetQuestion(qNum));
         list.appendChild(card);
       });
+    }
+
+    function resetQuestion(qNum) {
+      const qCard = document.getElementById(`q${qNum}`);
+      qCard.querySelectorAll('.quiz-btn').forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove('correct', 'wrong');
+      });
+      const fb = document.getElementById(`fb-${qNum}`);
+      fb.classList.remove('show', 'fb-ok', 'fb-ng');
+      fb.innerHTML = '';
+      document.getElementById(`retry-${qNum}`).classList.remove('show');
+      qCard.querySelector('.quiz-btn').focus();
     }
 
     function checkAnswer(qNum, optIdx) {
@@ -1767,6 +1796,7 @@
       const expl = document.createElement('div');
       expl.textContent = `解説：${q.explanation}`;
       fb.append(reason, expl);
+      document.getElementById(`retry-${qNum}`).classList.add('show');
     }
 
     renderQuiz();
