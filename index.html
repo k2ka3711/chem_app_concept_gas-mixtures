@@ -1777,8 +1777,10 @@
       });
     }
 
+    // パイプ内の粒子はコック（パイプの中央）より左なら容器1側として数える
+    const T_VALVE_X = (T_LEFT_WALL + T_RIGHT_WALL) / 2;
     function countLeftParticles() {
-      return tempParticles.filter(p => p.x < T_LEFT_WALL).length;
+      return tempParticles.filter(p => p.x < T_VALVE_X).length;
     }
 
     function resetTempSim() {
