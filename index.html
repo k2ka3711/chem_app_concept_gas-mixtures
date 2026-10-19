@@ -386,7 +386,8 @@
       font-size: 14px;
       line-height: 1.7;
     }
-    .insight-box strong {
+    /* 見出し（先頭の strong）だけをブロック表示にし、文中の強調は改行させない */
+    .insight-box > strong:first-child {
       display: block;
       color: var(--primary);
       font-size: 15px;
