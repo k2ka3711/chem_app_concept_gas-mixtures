@@ -643,6 +643,15 @@
       border-color: #ef4444;
       color: #991b1b;
     }
+    /* 正誤を色だけでなく記号と文字でも示す */
+    .quiz-btn.correct::after,
+    .quiz-btn.wrong::after {
+      float: right;
+      margin-left: 12px;
+      font-weight: 800;
+    }
+    .quiz-btn.correct::after { content: '✓ 正解'; }
+    .quiz-btn.wrong::after { content: '✗ あなたの解答'; }
     .quiz-feedback {
       margin-top: 14px;
       padding: 12px 16px;
