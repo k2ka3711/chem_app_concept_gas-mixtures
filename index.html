@@ -1529,22 +1529,47 @@
       openLabelY: 72, labelColor: '#64748b'
     });
 
+    // 実験③の設定値（体積 L, 混合前の圧力 atm）。表示・計算・粒子数はすべてここから求める
+    const COCK_SETUP = { V1: 1.0, V2: 3.0, PA0: 4.00, PB0: 2.00, totalParticles: 60 };
+    const fmtCockV = v => v.toFixed(1);
+    const fmtCockP = p => p.toFixed(2);
+
+    // 温度一定・ボイルの法則: 各気体は全体積 V1 + V2 に広がる
+    function calcCockMixed() {
+      const { V1, V2, PA0, PB0 } = COCK_SETUP;
+      const Vt = V1 + V2;
+      const pa = PA0 * V1 / Vt;
+      const pb = PB0 * V2 / Vt;
+      return { Vt, pa, pb, ptot: pa + pb };
+    }
+
+    // 体積比を約分した分数の文字列（例: 1.0 / 4.0 → "1/4"）
+    function volumeFraction(v, vt) {
+      const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+      const a = Math.round(v * 10), b = Math.round(vt * 10);
+      const g = gcd(a, b) || 1;
+      return `${a / g}/${b / g}`;
+    }
+
     function resetCockSim() {
+      const { V1, V2, PA0, PB0, totalParticles } = COCK_SETUP;
       isCockOpen = false;
       document.getElementById('btn-cock-toggle').innerHTML = '🚪 コックを開く（混合スタート）';
-      document.getElementById('cock-pa-val').textContent = '4.00';
-      document.getElementById('cock-pb-val').textContent = '2.00';
+      document.getElementById('cock-pa-val').textContent = fmtCockP(PA0);
+      document.getElementById('cock-pb-val').textContent = fmtCockP(PB0);
       document.getElementById('cock-ptot-val').textContent = '---';
-      document.getElementById('cock-pa-sub').textContent = '体積 1.0 L (左容器)';
-      document.getElementById('cock-pb-sub').textContent = '体積 3.0 L (右容器)';
+      document.getElementById('cock-pa-sub').textContent = `体積 ${fmtCockV(V1)} L (左容器)`;
+      document.getElementById('cock-pb-sub').textContent = `体積 ${fmtCockV(V2)} L (右容器)`;
       document.getElementById('cock-ptot-sub').textContent = 'コックが閉じているため、それぞれの容器で独立しています';
 
+      // 粒子数の比 = 物質量の比 = PV の比（温度一定）
+      const countA = Math.round(totalParticles * (PA0 * V1) / (PA0 * V1 + PB0 * V2));
       const L = cockVessel.leftWall, R = cockVessel.rightWall;
       cockParticles = [
-        // 左に気体A: 24個
-        ...spawnParticles('a', 24, 20, L - 30, 20, 220, 2.4),
-        // 右に気体B: 36個
-        ...spawnParticles('b', 36, R + 15, cCock.width - R - 30, 20, 220, 2.4)
+        // 左に気体A
+        ...spawnParticles('a', countA, 20, L - 30, 20, 220, 2.4),
+        // 右に気体B
+        ...spawnParticles('b', totalParticles - countA, R + 15, cCock.width - R - 30, 20, 220, 2.4)
       ];
     }
     resetCockSim();
@@ -1553,16 +1578,14 @@
       isCockOpen = !isCockOpen;
       if (isCockOpen) {
         document.getElementById('btn-cock-toggle').innerHTML = '🔒 コックを閉じる';
-        // 計算:
-        // pA = 4.00 * (1.0 / 4.0) = 1.00 atm
-        // pB = 2.00 * (3.0 / 4.0) = 1.50 atm
-        // P = 1.00 + 1.50 = 2.50 atm
-        document.getElementById('cock-pa-val').textContent = '1.00';
-        document.getElementById('cock-pb-val').textContent = '1.50';
-        document.getElementById('cock-ptot-val').textContent = '2.50';
-        document.getElementById('cock-pa-sub').textContent = '体積 4.0 L に拡散 (4.00 × 1/4)';
-        document.getElementById('cock-pb-sub').textContent = '体積 4.0 L に拡散 (2.00 × 3/4)';
-        document.getElementById('cock-ptot-sub').textContent = '全圧 P = 1.00 + 1.50 = 2.50 atm（きれいに求まります！）';
+        const { V1, V2, PA0, PB0 } = COCK_SETUP;
+        const m = calcCockMixed();
+        document.getElementById('cock-pa-val').textContent = fmtCockP(m.pa);
+        document.getElementById('cock-pb-val').textContent = fmtCockP(m.pb);
+        document.getElementById('cock-ptot-val').textContent = fmtCockP(m.ptot);
+        document.getElementById('cock-pa-sub').textContent = `体積 ${fmtCockV(m.Vt)} L に拡散 (${fmtCockP(PA0)} × ${volumeFraction(V1, m.Vt)})`;
+        document.getElementById('cock-pb-sub').textContent = `体積 ${fmtCockV(m.Vt)} L に拡散 (${fmtCockP(PB0)} × ${volumeFraction(V2, m.Vt)})`;
+        document.getElementById('cock-ptot-sub').textContent = `全圧 P = ${fmtCockP(m.pa)} + ${fmtCockP(m.pb)} = ${fmtCockP(m.ptot)} atm（きれいに求まります！）`;
       } else {
         document.getElementById('btn-cock-toggle').innerHTML = '🚪 コックを開く（混合スタート）';
       }
@@ -1571,7 +1594,7 @@
 
     function loopCock() {
       cockVessel.ctx.clearRect(0, 0, cCock.width, cCock.height);
-      drawVessel(cockVessel, isCockOpen, ['容器1 (体積 1.0 L)', '容器2 (体積 3.0 L)']);
+      drawVessel(cockVessel, isCockOpen, [`容器1 (体積 ${fmtCockV(COCK_SETUP.V1)} L)`, `容器2 (体積 ${fmtCockV(COCK_SETUP.V2)} L)`]);
 
       cockParticles.forEach(p => {
         updateVesselParticle(p, cockVessel, isCockOpen);
