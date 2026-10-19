@@ -22,6 +22,7 @@
       --gas-b-bg: #fff7ed;
       --gas-b-border: #fed7aa;
       --total: #7c3aed;         /* 全圧/混合: 紫 */
+      --gas-single: #475569;    /* ステップ5の1種類の気体: スレート */
       --total-bg: #f5f3ff;
       --accent-p: #ef4444;       /* 圧力: 赤 */
       --accent-v: #0284c7;       /* 体積: 空色 */
@@ -268,6 +269,10 @@
       border-left: 4px solid var(--total);
       background: var(--total-bg);
     }
+    .meter-card.meter-single {
+      border-left: 4px solid var(--gas-single);
+      background: #f8fafc;
+    }
 
     .meter-header {
       display: flex;
@@ -307,6 +312,7 @@
     .val-a { color: var(--gas-a); }
     .val-b { color: var(--gas-b); }
     .val-total { color: var(--total); }
+    .val-single { color: var(--gas-single); }
 
     .meter-unit {
       font-size: 12px;
@@ -1101,7 +1107,8 @@
         </h2>
         <p class="card-desc">
           模試や大学入試で頻出の「連結2容器の温度差問題」です。<br>
-          各容器の温度を変えたとき、<strong>「コックが閉じているとき」</strong>と<strong>「コックが開いているとき」</strong>で何が違うのかを直感で確かめましょう！
+          各容器の温度を変えたとき、<strong>「コックが閉じているとき」</strong>と<strong>「コックが開いているとき」</strong>で何が違うのかを直感で確かめましょう！<br>
+          ※ 容器1と容器2には<strong>同じ種類の気体（1種類）</strong>が入っています。
         </p>
 
         <div class="canvas-box" style="margin-bottom: 16px;">
@@ -1138,23 +1145,23 @@
 
         <!-- 状態表示メーター -->
         <div class="stage-grid" style="margin-top: 16px;">
-          <div class="meter-card meter-gas-a">
+          <div class="meter-card meter-single">
             <div class="meter-header">
               <span class="meter-title">容器1（左: 1.0 L）の圧力 P1</span>
             </div>
             <div class="meter-value-row">
-              <span class="meter-val val-a" id="temp-p1-val">1.00</span>
+              <span class="meter-val val-single" id="temp-p1-val">1.00</span>
               <span class="meter-unit">atm</span>
             </div>
             <div class="meter-sub" id="temp-n1-sub">粒子数: 15 個 (25.0%)</div>
           </div>
 
-          <div class="meter-card meter-gas-b">
+          <div class="meter-card meter-single">
             <div class="meter-header">
               <span class="meter-title">容器2（右: 3.0 L）の圧力 P2</span>
             </div>
             <div class="meter-value-row">
-              <span class="meter-val val-b" id="temp-p2-val">1.00</span>
+              <span class="meter-val val-single" id="temp-p2-val">1.00</span>
               <span class="meter-unit">atm</span>
             </div>
             <div class="meter-sub" id="temp-n2-sub">粒子数: 45 個 (75.0%)</div>
@@ -1234,7 +1241,7 @@
        ========================================================== */
     class Particle {
       constructor(type, x, y, vx, vy, radius = 5.5) {
-        this.type = type; // 'a' (青), 'b' (赤橙)
+        this.type = type; // 'a' (青), 'b' (赤橙), 'single' (ステップ5の1種類の気体: スレート)
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -1270,6 +1277,8 @@
 
         if (this.type === 'a') {
           ctx.fillStyle = `rgba(37, 99, 235, ${alpha})`;
+        } else if (this.type === 'single') {
+          ctx.fillStyle = `rgba(71, 85, 105, ${alpha})`;
         } else {
           ctx.fillStyle = `rgba(234, 88, 12, ${alpha})`;
         }
@@ -1736,8 +1745,8 @@
       const spd2 = 2.4 * Math.sqrt(currentT2 / 300);
 
       tempParticles = [
-        ...spawnParticles('a', targetN1, 20, T_LEFT_WALL - 35, 20, 230, spd1),
-        ...spawnParticles('b', TOTAL_TEMP_PARTICLES - targetN1, T_RIGHT_WALL + 15, cTemp.width - T_RIGHT_WALL - 30, 20, 230, spd2)
+        ...spawnParticles('single', targetN1, 20, T_LEFT_WALL - 35, 20, 230, spd1),
+        ...spawnParticles('single', TOTAL_TEMP_PARTICLES - targetN1, T_RIGHT_WALL + 15, cTemp.width - T_RIGHT_WALL - 30, 20, 230, spd2)
       ];
     }
 
