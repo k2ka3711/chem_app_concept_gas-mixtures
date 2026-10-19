@@ -980,7 +980,7 @@
                 <span class="meter-val val-a" id="cock-pa-val">4.00</span>
                 <span class="meter-unit">atm</span>
               </div>
-              <div class="meter-sub" id="cock-pa-sub">体積 1.0 L (左容器)</div>
+              <div class="meter-sub" id="cock-pa-sub">体積 1.00 L (左容器)</div>
             </div>
             <div class="meter-card meter-gas-b">
               <div class="meter-header"><span class="meter-title">気体Bの分圧 pB</span></div>
@@ -988,7 +988,7 @@
                 <span class="meter-val val-b" id="cock-pb-val">2.00</span>
                 <span class="meter-unit">atm</span>
               </div>
-              <div class="meter-sub" id="cock-pb-sub">体積 3.0 L (右容器)</div>
+              <div class="meter-sub" id="cock-pb-sub">体積 3.00 L (右容器)</div>
             </div>
           </div>
 
@@ -1003,10 +1003,10 @@
 
           <div class="insight-box">
             <strong>🎯 入試頻出！コックを開けたときの解き方（きれいに割り切れる！）</strong>
-            コックを開けて十分に時間がたつと、各気体は<strong>「全体の体積（1.0 L + 3.0 L = 4.0 L）」</strong>に均一に広がります。<br>
+            コックを開けて十分に時間がたつと、各気体は<strong>「全体の体積（1.00 L + 3.00 L = 4.00 L）」</strong>に均一に広がります。<br>
             ① ボイルの法則でそれぞれの分圧を求める：<br>
-            &nbsp;&nbsp;・気体A：<code>pA = 4.00 atm × (1.0 L / 4.0 L) = 1.00 atm</code><br>
-            &nbsp;&nbsp;・気体B：<code>pB = 2.00 atm × (3.0 L / 4.0 L) = 1.50 atm</code><br>
+            &nbsp;&nbsp;・気体A：<code>pA = 4.00 atm × (1.00 L / 4.00 L) = 1.00 atm</code><br>
+            &nbsp;&nbsp;・気体B：<code>pB = 2.00 atm × (3.00 L / 4.00 L) = 1.50 atm</code><br>
             ② 最後に足し算する：<code>全圧 P = 1.00 + 1.50 = 2.50 atm</code>
           </div>
         </div>
@@ -1545,7 +1545,7 @@
     runWhenVisible(cMole, loopMole);
 
     /* ==========================================================
-       ステップ2 実験③: コックを開けて混合シミュレータ (1.0 L & 3.0 L)
+       ステップ2 実験③: コックを開けて混合シミュレータ (1.00 L & 3.00 L)
        ========================================================== */
     const cCock = document.getElementById('canvas-cock');
     let isCockOpen = false;
@@ -1561,7 +1561,7 @@
 
     // 実験③の設定値（体積 L, 混合前の圧力 atm）。表示・計算・粒子数はすべてここから求める
     const COCK_SETUP = { V1: 1.0, V2: 3.0, PA0: 4.00, PB0: 2.00, totalParticles: 60 };
-    const fmtCockV = v => v.toFixed(1);
+    const fmtCockV = v => v.toFixed(2);
     const fmtCockP = p => p.toFixed(2);
 
     // 温度一定・ボイルの法則: 各気体は全体積 V1 + V2 に広がる
