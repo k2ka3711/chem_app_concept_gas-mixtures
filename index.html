@@ -1714,6 +1714,8 @@
     });
     const T_LEFT_WALL = tempVessel.leftWall;
     const T_RIGHT_WALL = tempVessel.rightWall;
+    // パイプ内の粒子はコック（パイプの中央）より左なら容器1側とみなす
+    const T_VALVE_X = (T_LEFT_WALL + T_RIGHT_WALL) / 2;
 
     // 初期状態: 基準温度 T0 = 300 K, 初期圧力 P0 = 1.00 atm
     // V1 = 1.0 L, V2 = 3.0 L
@@ -1780,20 +1782,20 @@
           initTempParticles(targetN1);
         }
       }
+    }
 
-      // 粒子の速度を温度に合わせて調整
+    // 粒子の速さを、いま居る容器の温度に合わせる（v ∝ √T）。容器を移った粒子もその容器の温度の速さになる
+    function matchTempSpeeds(T1, T2) {
       const spd1 = 2.4 * Math.sqrt(T1 / 300);
       const spd2 = 2.4 * Math.sqrt(T2 / 300);
       tempParticles.forEach(p => {
         const curSpd = Math.hypot(p.vx, p.vy) || 1;
-        const targetSpd = (p.x < T_LEFT_WALL) ? spd1 : spd2;
+        const targetSpd = (p.x < T_VALVE_X) ? spd1 : spd2;
         p.vx = (p.vx / curSpd) * targetSpd;
         p.vy = (p.vy / curSpd) * targetSpd;
       });
     }
 
-    // パイプ内の粒子はコック（パイプの中央）より左なら容器1側として数える
-    const T_VALVE_X = (T_LEFT_WALL + T_RIGHT_WALL) / 2;
     function countLeftParticles() {
       return tempParticles.filter(p => p.x < T_VALVE_X).length;
     }
@@ -1846,6 +1848,7 @@
         [`容器1 (1.0 L, ${T1} K)`, `容器2 (3.0 L, ${T2} K)`],
         [getTempBg(T1), getTempBg(T2)]);
 
+      matchTempSpeeds(T1, T2);
       tempParticles.forEach(p => {
         updateVesselParticle(p, tempVessel, isTempCockOpen);
         p.draw(tempVessel.ctx, 'both');
