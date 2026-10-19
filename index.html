@@ -1278,6 +1278,102 @@
       }
     }
 
+    // 指定範囲にランダムな位置・向きで粒子を生成する（speed は数値または毎回呼ぶ関数）
+    function spawnParticles(type, count, x0, w, y0, h, speed) {
+      const list = [];
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = (typeof speed === 'function') ? speed() : speed;
+        list.push(new Particle(type, x0 + Math.random() * w, y0 + Math.random() * h, Math.cos(angle) * spd, Math.sin(angle) * spd));
+      }
+      return list;
+    }
+
+    /* ==========================================================
+       2容器（コック付き）共通: 壁判定・描画
+       ========================================================== */
+    // leftWall/rightWall: パイプ部の左右端の x, pipeTop/pipeBottom: パイプの上下の y
+    function createVessel(canvas, opts) {
+      return Object.assign({ canvas, ctx: canvas.getContext('2d') }, opts);
+    }
+
+    function updateVesselParticle(p, v, isOpen) {
+      const W = v.canvas.width, H = v.canvas.height;
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // 外壁
+      if (p.x - p.radius < 10) { p.x = 10 + p.radius; p.vx *= -1; }
+      if (p.x + p.radius > W - 10) { p.x = W - 10 - p.radius; p.vx *= -1; }
+      if (p.y - p.radius < 10) { p.y = 10 + p.radius; p.vy *= -1; }
+      if (p.y + p.radius > H - 10) { p.y = H - 10 - p.radius; p.vy *= -1; }
+
+      // パイプ部の高さにいるか
+      const inPipeY = (p.y > v.pipeTop && p.y < v.pipeBottom);
+
+      if (!isOpen || !inPipeY) {
+        if (p.x < v.leftWall && p.x + p.radius >= v.leftWall) {
+          p.x = v.leftWall - p.radius;
+          p.vx *= -1;
+        } else if (p.x > v.rightWall && p.x - p.radius <= v.rightWall) {
+          p.x = v.rightWall + p.radius;
+          p.vx *= -1;
+        }
+      }
+    }
+
+    // bgColors: [左容器, 右容器] の背景色（省略可）, labels: [左, 右] の容器ラベル
+    function drawVessel(v, isOpen, labels, bgColors) {
+      const ctx = v.ctx, W = v.canvas.width, H = v.canvas.height;
+      const L = v.leftWall, R = v.rightWall;
+      ctx.save();
+
+      if (bgColors) {
+        ctx.fillStyle = bgColors[0];
+        ctx.fillRect(10, 10, L - 10, H - 20);
+        ctx.fillStyle = bgColors[1];
+        ctx.fillRect(R, 10, W - R - 10, H - 20);
+      }
+
+      // 外枠
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, L - 10, H - 20);
+      ctx.strokeRect(R, 10, W - R - 10, H - 20);
+
+      // パイプ連結部
+      ctx.beginPath();
+      ctx.moveTo(L, v.pipeTop);
+      ctx.lineTo(R, v.pipeTop);
+      ctx.moveTo(L, v.pipeBottom);
+      ctx.lineTo(R, v.pipeBottom);
+      ctx.stroke();
+
+      // コック弁
+      const valveX = (L + R) / 2;
+      ctx.font = 'bold 12px "Noto Sans JP"';
+      ctx.textAlign = 'center';
+      if (!isOpen) {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(valveX - 4, v.pipeTop - 10, 8, (v.pipeBottom - v.pipeTop) + 20);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText('コック [閉]', valveX, v.pipeTop - 20);
+      } else {
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(valveX - 4, v.pipeTop - 25, 8, 15);
+        ctx.fillText('コック [開]', valveX, v.openLabelY);
+      }
+
+      // 容器ラベル
+      ctx.fillStyle = v.labelColor;
+      ctx.font = 'bold 13px "Noto Sans JP"';
+      ctx.textAlign = 'center';
+      ctx.fillText(labels[0], (10 + L) / 2, H - 18);
+      ctx.fillText(labels[1], (R + W - 10) / 2, H - 18);
+
+      ctx.restore();
+    }
+
     /* ==========================================================
        ステップ1 シミュレータ: 気体Aと気体Bの同時運動＆フィルター
        ========================================================== */
@@ -1285,17 +1381,11 @@
     const ctx1 = c1.getContext('2d');
     let viewFilter = 'both';
 
-    const particles1 = [];
-    for (let i = 0; i < 30; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 2.0 + Math.random() * 1.4;
-      particles1.push(new Particle('a', 20 + Math.random() * 420, 20 + Math.random() * 260, Math.cos(angle) * speed, Math.sin(angle) * speed));
-    }
-    for (let i = 0; i < 20; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 2.0 + Math.random() * 1.4;
-      particles1.push(new Particle('b', 20 + Math.random() * 420, 20 + Math.random() * 260, Math.cos(angle) * speed, Math.sin(angle) * speed));
-    }
+    const randomSpeed1 = () => 2.0 + Math.random() * 1.4;
+    const particles1 = [
+      ...spawnParticles('a', 30, 20, 420, 20, 260, randomSpeed1),
+      ...spawnParticles('b', 20, 20, 420, 20, 260, randomSpeed1)
+    ];
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1336,17 +1426,10 @@
     let particlesDalton = [];
 
     function initDaltonParticles(na, nb) {
-      particlesDalton = [];
-      for (let i = 0; i < na; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const spd = 2.2;
-        particlesDalton.push(new Particle('a', 20 + Math.random() * 420, 20 + Math.random() * 240, Math.cos(angle)*spd, Math.sin(angle)*spd));
-      }
-      for (let i = 0; i < nb; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const spd = 2.2;
-        particlesDalton.push(new Particle('b', 20 + Math.random() * 420, 20 + Math.random() * 240, Math.cos(angle)*spd, Math.sin(angle)*spd));
-      }
+      particlesDalton = [
+        ...spawnParticles('a', na, 20, 420, 20, 240, 2.2),
+        ...spawnParticles('b', nb, 20, 420, 20, 240, 2.2)
+      ];
     }
 
     const sliderNa = document.getElementById('slider-na');
@@ -1413,15 +1496,10 @@
 
       const countA = Math.round(40 * (pctA / 100));
       const countB = 40 - countA;
-      particlesMole = [];
-      for (let i = 0; i < countA; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        particlesMole.push(new Particle('a', 20 + Math.random() * 420, 20 + Math.random() * 240, Math.cos(angle)*2.2, Math.sin(angle)*2.2));
-      }
-      for (let i = 0; i < countB; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        particlesMole.push(new Particle('b', 20 + Math.random() * 420, 20 + Math.random() * 240, Math.cos(angle)*2.2, Math.sin(angle)*2.2));
-      }
+      particlesMole = [
+        ...spawnParticles('a', countA, 20, 420, 20, 240, 2.2),
+        ...spawnParticles('b', countB, 20, 420, 20, 240, 2.2)
+      ];
     }
     document.getElementById('slider-mix-ratio').addEventListener('input', updateMoleUI);
     updateMoleUI();
@@ -1440,15 +1518,16 @@
        ステップ2 実験③: コックを開けて混合シミュレータ (1.0 L & 3.0 L)
        ========================================================== */
     const cCock = document.getElementById('canvas-cock');
-    const ctxCock = cCock.getContext('2d');
     let isCockOpen = false;
     let cockParticles = [];
 
     // 左容器: 10 〜 190 (幅180, 体積1.0 L比)
     // コック部: 190 〜 230 (幅40)
     // 右容器: 230 〜 690 (幅460, 体積3.0 L比)
-    const COCK_LEFT_WALL = 190;
-    const COCK_RIGHT_WALL = 230;
+    const cockVessel = createVessel(cCock, {
+      leftWall: 190, rightWall: 230, pipeTop: 105, pipeBottom: 155,
+      openLabelY: 72, labelColor: '#64748b'
+    });
 
     function resetCockSim() {
       isCockOpen = false;
@@ -1460,17 +1539,13 @@
       document.getElementById('cock-pb-sub').textContent = '体積 3.0 L (右容器)';
       document.getElementById('cock-ptot-sub').textContent = 'コックが閉じているため、それぞれの容器で独立しています';
 
-      cockParticles = [];
-      // 左に気体A: 24個
-      for (let i = 0; i < 24; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        cockParticles.push(new Particle('a', 20 + Math.random() * (COCK_LEFT_WALL - 30), 20 + Math.random() * 220, Math.cos(angle)*2.4, Math.sin(angle)*2.4));
-      }
-      // 右に気体B: 36個
-      for (let i = 0; i < 36; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        cockParticles.push(new Particle('b', (COCK_RIGHT_WALL + 15) + Math.random() * (cCock.width - COCK_RIGHT_WALL - 30), 20 + Math.random() * 220, Math.cos(angle)*2.4, Math.sin(angle)*2.4));
-      }
+      const L = cockVessel.leftWall, R = cockVessel.rightWall;
+      cockParticles = [
+        // 左に気体A: 24個
+        ...spawnParticles('a', 24, 20, L - 30, 20, 220, 2.4),
+        // 右に気体B: 36個
+        ...spawnParticles('b', 36, R + 15, cCock.width - R - 30, 20, 220, 2.4)
+      ];
     }
     resetCockSim();
 
@@ -1494,89 +1569,13 @@
     });
     document.getElementById('btn-cock-reset').addEventListener('click', resetCockSim);
 
-    function updateCockParticle(p) {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      // 外壁判定
-      if (p.x - p.radius < 10) { p.x = 10 + p.radius; p.vx *= -1; }
-      if (p.x + p.radius > cCock.width - 10) { p.x = cCock.width - 10 - p.radius; p.vx *= -1; }
-      if (p.y - p.radius < 10) { p.y = 10 + p.radius; p.vy *= -1; }
-      if (p.y + p.radius > cCock.height - 10) { p.y = cCock.height - 10 - p.radius; p.vy *= -1; }
-
-      // コック部 (y: 105〜155)
-      const inPipeY = (p.y > 105 && p.y < 155);
-
-      if (!isCockOpen) {
-        if (p.x < COCK_LEFT_WALL && p.x + p.radius >= COCK_LEFT_WALL) {
-          p.x = COCK_LEFT_WALL - p.radius;
-          p.vx *= -1;
-        } else if (p.x > COCK_RIGHT_WALL && p.x - p.radius <= COCK_RIGHT_WALL) {
-          p.x = COCK_RIGHT_WALL + p.radius;
-          p.vx *= -1;
-        }
-      } else {
-        if (!inPipeY) {
-          if (p.x < COCK_LEFT_WALL && p.x + p.radius >= COCK_LEFT_WALL) {
-            p.x = COCK_LEFT_WALL - p.radius;
-            p.vx *= -1;
-          } else if (p.x > COCK_RIGHT_WALL && p.x - p.radius <= COCK_RIGHT_WALL) {
-            p.x = COCK_RIGHT_WALL + p.radius;
-            p.vx *= -1;
-          }
-        }
-      }
-    }
-
     function loopCock() {
-      ctxCock.clearRect(0, 0, cCock.width, cCock.height);
-
-      ctxCock.save();
-      ctxCock.strokeStyle = '#94a3b8';
-      ctxCock.lineWidth = 3;
-
-      // 容器1 (1.0 L)
-      ctxCock.strokeRect(10, 10, COCK_LEFT_WALL - 10, cCock.height - 20);
-      // 容器2 (3.0 L)
-      ctxCock.strokeRect(COCK_RIGHT_WALL, 10, cCock.width - COCK_RIGHT_WALL - 10, cCock.height - 20);
-
-      // パイプ連結部
-      ctxCock.beginPath();
-      ctxCock.moveTo(COCK_LEFT_WALL, 105);
-      ctxCock.lineTo(COCK_RIGHT_WALL, 105);
-      ctxCock.moveTo(COCK_LEFT_WALL, 155);
-      ctxCock.lineTo(COCK_RIGHT_WALL, 155);
-      ctxCock.stroke();
-
-      // コック弁
-      const valveX = (COCK_LEFT_WALL + COCK_RIGHT_WALL) / 2;
-      if (!isCockOpen) {
-        ctxCock.fillStyle = '#ef4444';
-        ctxCock.fillRect(valveX - 4, 95, 8, 70);
-        ctxCock.fillStyle = '#0f172a';
-        ctxCock.font = 'bold 12px "Noto Sans JP"';
-        ctxCock.textAlign = 'center';
-        ctxCock.fillText('コック [閉]', valveX, 85);
-      } else {
-        ctxCock.fillStyle = '#10b981';
-        ctxCock.fillRect(valveX - 4, 80, 8, 15);
-        ctxCock.fillStyle = '#10b981';
-        ctxCock.font = 'bold 12px "Noto Sans JP"';
-        ctxCock.textAlign = 'center';
-        ctxCock.fillText('コック [開]', valveX, 72);
-      }
-
-      ctxCock.fillStyle = '#64748b';
-      ctxCock.font = 'bold 13px "Noto Sans JP"';
-      ctxCock.textAlign = 'center';
-      ctxCock.fillText('容器1 (体積 1.0 L)', (10 + COCK_LEFT_WALL) / 2, cCock.height - 18);
-      ctxCock.fillText('容器2 (体積 3.0 L)', (COCK_RIGHT_WALL + cCock.width - 10) / 2, cCock.height - 18);
-
-      ctxCock.restore();
+      cockVessel.ctx.clearRect(0, 0, cCock.width, cCock.height);
+      drawVessel(cockVessel, isCockOpen, ['容器1 (体積 1.0 L)', '容器2 (体積 3.0 L)']);
 
       cockParticles.forEach(p => {
-        updateCockParticle(p);
-        p.draw(ctxCock, 'both');
+        updateVesselParticle(p, cockVessel, isCockOpen);
+        p.draw(cockVessel.ctx, 'both');
       });
 
       requestAnimationFrame(loopCock);
@@ -1661,15 +1660,18 @@
        ステップ5 (発展アペンデックス): 温度変化とコック開閉シミュレータ
        ========================================================== */
     const cTemp = document.getElementById('canvas-temp');
-    const ctxTemp = cTemp.getContext('2d');
     let isTempCockOpen = false;
     let tempParticles = [];
 
     // 左容器: 10 〜 190 (幅180, 体積1.0 L比)
     // パイプ: 190 〜 230
     // 右容器: 230 〜 690 (幅460, 体積3.0 L比)
-    const T_LEFT_WALL = 190;
-    const T_RIGHT_WALL = 230;
+    const tempVessel = createVessel(cTemp, {
+      leftWall: 190, rightWall: 230, pipeTop: 110, pipeBottom: 160,
+      openLabelY: 75, labelColor: '#475569'
+    });
+    const T_LEFT_WALL = tempVessel.leftWall;
+    const T_RIGHT_WALL = tempVessel.rightWall;
 
     // 初期状態: 基準温度 T0 = 300 K, 初期圧力 P0 = 1.00 atm
     // V1 = 1.0 L, V2 = 3.0 L
@@ -1679,7 +1681,6 @@
     let n2_closed = 45;
 
     function initTempParticles(targetN1) {
-      tempParticles = [];
       const currentT1 = parseInt(document.getElementById('slider-t1').value, 10);
       const currentT2 = parseInt(document.getElementById('slider-t2').value, 10);
 
@@ -1687,14 +1688,10 @@
       const spd1 = 2.4 * Math.sqrt(currentT1 / 300);
       const spd2 = 2.4 * Math.sqrt(currentT2 / 300);
 
-      for (let i = 0; i < targetN1; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        tempParticles.push(new Particle('a', 20 + Math.random() * (T_LEFT_WALL - 35), 20 + Math.random() * 230, Math.cos(angle)*spd1, Math.sin(angle)*spd1));
-      }
-      for (let i = 0; i < (TOTAL_TEMP_PARTICLES - targetN1); i++) {
-        const angle = Math.random() * Math.PI * 2;
-        tempParticles.push(new Particle('b', (T_RIGHT_WALL + 15) + Math.random() * (cTemp.width - T_RIGHT_WALL - 30), 20 + Math.random() * 230, Math.cos(angle)*spd2, Math.sin(angle)*spd2));
-      }
+      tempParticles = [
+        ...spawnParticles('a', targetN1, 20, T_LEFT_WALL - 35, 20, 230, spd1),
+        ...spawnParticles('b', TOTAL_TEMP_PARTICLES - targetN1, T_RIGHT_WALL + 15, cTemp.width - T_RIGHT_WALL - 30, 20, 230, spd2)
+      ];
     }
 
     function calculateTempState() {
@@ -1785,42 +1782,8 @@
     document.getElementById('btn-temp-reset').addEventListener('click', resetTempSim);
     resetTempSim();
 
-    function updateTempParticle(p) {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      // 外壁
-      if (p.x - p.radius < 10) { p.x = 10 + p.radius; p.vx *= -1; }
-      if (p.x + p.radius > cTemp.width - 10) { p.x = cTemp.width - 10 - p.radius; p.vx *= -1; }
-      if (p.y - p.radius < 10) { p.y = 10 + p.radius; p.vy *= -1; }
-      if (p.y + p.radius > cTemp.height - 10) { p.y = cTemp.height - 10 - p.radius; p.vy *= -1; }
-
-      // パイプ部 (y: 110〜160)
-      const inPipeY = (p.y > 110 && p.y < 160);
-
-      if (!isTempCockOpen) {
-        if (p.x < T_LEFT_WALL && p.x + p.radius >= T_LEFT_WALL) {
-          p.x = T_LEFT_WALL - p.radius;
-          p.vx *= -1;
-        } else if (p.x > T_RIGHT_WALL && p.x - p.radius <= T_RIGHT_WALL) {
-          p.x = T_RIGHT_WALL + p.radius;
-          p.vx *= -1;
-        }
-      } else {
-        if (!inPipeY) {
-          if (p.x < T_LEFT_WALL && p.x + p.radius >= T_LEFT_WALL) {
-            p.x = T_LEFT_WALL - p.radius;
-            p.vx *= -1;
-          } else if (p.x > T_RIGHT_WALL && p.x - p.radius <= T_RIGHT_WALL) {
-            p.x = T_RIGHT_WALL + p.radius;
-            p.vx *= -1;
-          }
-        }
-      }
-    }
-
     function loopTemp() {
-      ctxTemp.clearRect(0, 0, cTemp.width, cTemp.height);
+      tempVessel.ctx.clearRect(0, 0, cTemp.width, cTemp.height);
 
       const T1 = parseInt(document.getElementById('slider-t1').value, 10);
       const T2 = parseInt(document.getElementById('slider-t2').value, 10);
@@ -1836,59 +1799,13 @@
         }
       };
 
-      ctxTemp.save();
-      // 容器1 背景色
-      ctxTemp.fillStyle = getTempBg(T1);
-      ctxTemp.fillRect(10, 10, T_LEFT_WALL - 10, cTemp.height - 20);
-
-      // 容器2 背景色
-      ctxTemp.fillStyle = getTempBg(T2);
-      ctxTemp.fillRect(T_RIGHT_WALL, 10, cTemp.width - T_RIGHT_WALL - 10, cTemp.height - 20);
-
-      // 外枠
-      ctxTemp.strokeStyle = '#94a3b8';
-      ctxTemp.lineWidth = 3;
-      ctxTemp.strokeRect(10, 10, T_LEFT_WALL - 10, cTemp.height - 20);
-      ctxTemp.strokeRect(T_RIGHT_WALL, 10, cTemp.width - T_RIGHT_WALL - 10, cTemp.height - 20);
-
-      // パイプ連結部
-      ctxTemp.beginPath();
-      ctxTemp.moveTo(T_LEFT_WALL, 110);
-      ctxTemp.lineTo(T_RIGHT_WALL, 110);
-      ctxTemp.moveTo(T_LEFT_WALL, 160);
-      ctxTemp.lineTo(T_RIGHT_WALL, 160);
-      ctxTemp.stroke();
-
-      // コック弁
-      const valveX = (T_LEFT_WALL + T_RIGHT_WALL) / 2;
-      if (!isTempCockOpen) {
-        ctxTemp.fillStyle = '#ef4444';
-        ctxTemp.fillRect(valveX - 4, 100, 8, 70);
-        ctxTemp.fillStyle = '#0f172a';
-        ctxTemp.font = 'bold 12px "Noto Sans JP"';
-        ctxTemp.textAlign = 'center';
-        ctxTemp.fillText('コック [閉]', valveX, 90);
-      } else {
-        ctxTemp.fillStyle = '#10b981';
-        ctxTemp.fillRect(valveX - 4, 85, 8, 15);
-        ctxTemp.fillStyle = '#10b981';
-        ctxTemp.font = 'bold 12px "Noto Sans JP"';
-        ctxTemp.textAlign = 'center';
-        ctxTemp.fillText('コック [開]', valveX, 75);
-      }
-
-      // 容器ラベル
-      ctxTemp.fillStyle = '#475569';
-      ctxTemp.font = 'bold 13px "Noto Sans JP"';
-      ctxTemp.textAlign = 'center';
-      ctxTemp.fillText(`容器1 (1.0 L, ${T1} K)`, (10 + T_LEFT_WALL) / 2, cTemp.height - 18);
-      ctxTemp.fillText(`容器2 (3.0 L, ${T2} K)`, (T_RIGHT_WALL + cTemp.width - 10) / 2, cTemp.height - 18);
-
-      ctxTemp.restore();
+      drawVessel(tempVessel, isTempCockOpen,
+        [`容器1 (1.0 L, ${T1} K)`, `容器2 (3.0 L, ${T2} K)`],
+        [getTempBg(T1), getTempBg(T2)]);
 
       tempParticles.forEach(p => {
-        updateTempParticle(p);
-        p.draw(ctxTemp, 'both');
+        updateVesselParticle(p, tempVessel, isTempCockOpen);
+        p.draw(tempVessel.ctx, 'both');
       });
 
       requestAnimationFrame(loopTemp);
