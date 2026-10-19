@@ -1551,11 +1551,11 @@
     let isCockOpen = false;
     let cockParticles = [];
 
-    // 左容器: 10 〜 190 (幅180, 体積1.0 L比)
-    // コック部: 190 〜 230 (幅40)
-    // 右容器: 230 〜 690 (幅460, 体積3.0 L比)
+    // 左容器: 10 〜 170 (幅160, 体積1.0 L比)
+    // コック部: 170 〜 210 (幅40)
+    // 右容器: 210 〜 690 (幅480, 体積3.0 L比) → 幅の比 1 : 3 = 体積比
     const cockVessel = createVessel(cCock, {
-      leftWall: 190, rightWall: 230, pipeTop: 105, pipeBottom: 155,
+      leftWall: 170, rightWall: 210, pipeTop: 105, pipeBottom: 155,
       openLabelY: 72, labelColor: '#64748b'
     });
 
@@ -1714,11 +1714,11 @@
     let isTempCockOpen = false;
     let tempParticles = [];
 
-    // 左容器: 10 〜 190 (幅180, 体積1.0 L比)
-    // パイプ: 190 〜 230
-    // 右容器: 230 〜 690 (幅460, 体積3.0 L比)
+    // 左容器: 10 〜 170 (幅160, 体積1.0 L比)
+    // パイプ: 170 〜 210
+    // 右容器: 210 〜 690 (幅480, 体積3.0 L比) → 幅の比 1 : 3 = 体積比
     const tempVessel = createVessel(cTemp, {
-      leftWall: 190, rightWall: 230, pipeTop: 110, pipeBottom: 160,
+      leftWall: 170, rightWall: 210, pipeTop: 110, pipeBottom: 160,
       openLabelY: 75, labelColor: '#475569'
     });
     const T_LEFT_WALL = tempVessel.leftWall;
