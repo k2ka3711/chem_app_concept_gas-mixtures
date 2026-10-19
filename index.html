@@ -1083,51 +1083,8 @@
           身につけた直感をためす3つの問題です。計算用紙なしでも直感で解けます！
         </p>
 
-        <!-- Q1 -->
-        <div class="quiz-card" id="q1">
-          <span class="quiz-num">第 1 問</span>
-          <div class="quiz-q">
-            大気圧（全圧 1.00 atm）の部屋の中に、窒素と酸素がモル比 4 : 1 で混ざっています。<br>
-            この部屋の中にある「酸素の分圧」はいくらでしょうか？
-          </div>
-          <div class="quiz-options">
-            <button class="quiz-btn" onclick="checkAnswer(1, 0, false)">A. 0.50 atm</button>
-            <button class="quiz-btn" onclick="checkAnswer(1, 1, true)">B. 0.20 atm</button>
-            <button class="quiz-btn" onclick="checkAnswer(1, 2, false)">C. 0.80 atm</button>
-          </div>
-          <div class="quiz-feedback" id="fb-1"></div>
-        </div>
-
-        <!-- Q2 -->
-        <div class="quiz-card" id="q2">
-          <span class="quiz-num">第 2 問</span>
-          <div class="quiz-q">
-            同じ容器に「とても重い分子（キセノン）」と「とても軽い分子（ヘリウム）」をちょうど同じ分子数（同モル）ずつ入れました。<br>
-            2つの気体の分圧を比べると、どうなるでしょうか？
-          </div>
-          <div class="quiz-options">
-            <button class="quiz-btn" onclick="checkAnswer(2, 0, false)">A. 重いキセノンの方が壁に強くぶつかるので分圧が大きい</button>
-            <button class="quiz-btn" onclick="checkAnswer(2, 1, true)">B. 分子の重さに関係なく、どちらの分圧もまったく同じ</button>
-            <button class="quiz-btn" onclick="checkAnswer(2, 2, false)">C. 軽いヘリウムの方がスピードが速いので分圧が大きい</button>
-          </div>
-          <div class="quiz-feedback" id="fb-2"></div>
-        </div>
-
-        <!-- Q3 -->
-        <div class="quiz-card" id="q3">
-          <span class="quiz-num">第 3 問</span>
-          <div class="quiz-q">
-            体積 1.0 L、圧力 4.00 atm の気体Aの入った容器と、<br>
-            体積 3.0 L、圧力 2.00 atm の気体Bの入った容器をつなぐコックを開けました。<br>
-            混合後の容器全体の「全圧」はいくらになるでしょうか？（温度一定）
-          </div>
-          <div class="quiz-options">
-            <button class="quiz-btn" onclick="checkAnswer(3, 0, false)">A. 6.00 atm</button>
-            <button class="quiz-btn" onclick="checkAnswer(3, 1, false)">B. 3.00 atm</button>
-            <button class="quiz-btn" onclick="checkAnswer(3, 2, true)">C. 2.50 atm</button>
-          </div>
-          <div class="quiz-feedback" id="fb-3"></div>
-        </div>
+        <!-- 問題は QUIZ_DATA（スクリプト内）から描画 -->
+        <div id="quiz-list"></div>
 
         <div class="step-nav-bar">
           <button class="btn-nav prev prev-step" data-target="3">← ステップ3へ</button>
@@ -1629,22 +1586,62 @@
     /* ==========================================================
        ステップ4: クイズ判定ロジック
        ========================================================== */
-    const quizExplanations = {
-      1: {
+    // 問題データ: 問題の追加・修正はこの配列だけを編集する
+    const QUIZ_DATA = [
+      {
+        question: '大気圧（全圧 1.00 atm）の部屋の中に、窒素と酸素がモル比 4 : 1 で混ざっています。<br>この部屋の中にある「酸素の分圧」はいくらでしょうか？',
+        options: ['A. 0.50 atm', 'B. 0.20 atm', 'C. 0.80 atm'],
+        answer: 1,
         ok: '🎉 正解！モル比が 4 : 1 なので、酸素のモル分率は 1 / (4 + 1) = 0.20 です。分圧は 1.00 atm × 0.20 = 0.20 atm になります。',
         ng: '残念！全モル数は 4 + 1 = 5 なので、酸素の割合（モル分率）は 1/5 = 0.20 です。分圧は 1.00 atm × 0.20 = 0.20 atm となります。'
       },
-      2: {
+      {
+        question: '同じ容器に「とても重い分子（キセノン）」と「とても軽い分子（ヘリウム）」をちょうど同じ分子数（同モル）ずつ入れました。<br>2つの気体の分圧を比べると、どうなるでしょうか？',
+        options: [
+          'A. 重いキセノンの方が壁に強くぶつかるので分圧が大きい',
+          'B. 分子の重さに関係なく、どちらの分圧もまったく同じ',
+          'C. 軽いヘリウムの方がスピードが速いので分圧が大きい'
+        ],
+        answer: 1,
         ok: '🎉 正解！理想気体の圧力は「分子の重さ」ではなく「分子の数（モル数）」と温度だけで決まります。重い分子は遅く、軽い分子は速く動くため、壁に与える力積（衝撃の合計）は完全に同じになります！',
         ng: '惜しい！重い分子はスピードが遅く、軽い分子はスピードが速いため、同じ温度であれば分子の平均運動エネルギーは等しくなります。したがってモル数が同じなら分圧も等しくなります。'
       },
-      3: {
+      {
+        question: '体積 1.0 L、圧力 4.00 atm の気体Aの入った容器と、<br>体積 3.0 L、圧力 2.00 atm の気体Bの入った容器をつなぐコックを開けました。<br>混合後の容器全体の「全圧」はいくらになるでしょうか？（温度一定）',
+        options: ['A. 6.00 atm', 'B. 3.00 atm', 'C. 2.50 atm'],
+        answer: 2,
         ok: '🎉 正解！全体の体積は 1.0 + 3.0 = 4.0 L です。ボイルの法則により、気体Aの分圧は 4.00 × (1/4) = 1.00 atm、気体Bの分圧は 2.00 × (3/4) = 1.50 atm となり、全圧は 1.00 + 1.50 = 2.50 atm になります！',
         ng: '残念！体積が 4.0 L に広がるため、ボイルの法則により各気体の分圧はそれぞれ pA = 1.00 atm、pB = 1.50 atm になります。ドルトンの法則で足し合わせると全圧は 2.50 atm です。'
       }
-    };
+    ];
 
-    function checkAnswer(qNum, optIdx, isCorrect) {
+    function renderQuiz() {
+      const list = document.getElementById('quiz-list');
+      QUIZ_DATA.forEach((q, i) => {
+        const qNum = i + 1;
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        card.id = `q${qNum}`;
+        card.innerHTML = `
+          <span class="quiz-num">第 ${qNum} 問</span>
+          <div class="quiz-q">${q.question}</div>
+          <div class="quiz-options"></div>
+          <div class="quiz-feedback" id="fb-${qNum}"></div>`;
+        const opts = card.querySelector('.quiz-options');
+        q.options.forEach((label, optIdx) => {
+          const btn = document.createElement('button');
+          btn.className = 'quiz-btn';
+          btn.textContent = label;
+          btn.addEventListener('click', () => checkAnswer(qNum, optIdx));
+          opts.appendChild(btn);
+        });
+        list.appendChild(card);
+      });
+    }
+
+    function checkAnswer(qNum, optIdx) {
+      const q = QUIZ_DATA[qNum - 1];
+      const isCorrect = optIdx === q.answer;
       const qCard = document.getElementById(`q${qNum}`);
       const btns = qCard.querySelectorAll('.quiz-btn');
       btns.forEach((btn, idx) => {
@@ -1655,8 +1652,10 @@
       });
       const fb = document.getElementById(`fb-${qNum}`);
       fb.classList.add('show', isCorrect ? 'fb-ok' : 'fb-ng');
-      fb.textContent = isCorrect ? quizExplanations[qNum].ok : quizExplanations[qNum].ng;
+      fb.textContent = isCorrect ? q.ok : q.ng;
     }
+
+    renderQuiz();
 
     /* ==========================================================
        ステップ5 (発展アペンデックス): 温度変化とコック開閉シミュレータ
