@@ -932,6 +932,7 @@
                   <span class="meter-val val-a" id="mole-xa-val">0.75</span>
                   <span class="meter-unit">(75%)</span>
                 </div>
+                <div class="meter-sub" id="mole-pa-sub">分圧 pA = P × xA = 0.75 atm</div>
               </div>
               <div class="meter-card meter-gas-b">
                 <div class="meter-header"><span class="meter-title">モル分率 xB = nB / n全</span></div>
@@ -939,13 +940,19 @@
                   <span class="meter-val val-b" id="mole-xb-val">0.25</span>
                   <span class="meter-unit">(25%)</span>
                 </div>
+                <div class="meter-sub" id="mole-pb-sub">分圧 pB = P × xB = 0.25 atm</div>
               </div>
               <div class="meter-card meter-total">
-                <div class="meter-header"><span class="meter-title">分圧比 pA : pB</span></div>
+                <div class="meter-header"><span class="meter-title">物質量の比と分圧の比を比べよう</span></div>
+                <div class="meter-value-row">
+                  <span class="meter-val val-total" id="mole-nratio-val">3 : 1</span>
+                  <span class="meter-unit">物質量の比 nA : nB</span>
+                </div>
                 <div class="meter-value-row">
                   <span class="meter-val val-total" id="mole-ratio-val">3 : 1</span>
-                  <span class="meter-unit">一致！</span>
+                  <span class="meter-unit">分圧の比 pA : pB</span>
                 </div>
+                <div class="meter-sub" id="mole-match-sub">2つの比が一致！</div>
               </div>
             </div>
           </div>
@@ -959,6 +966,9 @@
               <input type="range" id="slider-mix-ratio" min="0" max="100" step="5" value="75">
             </div>
           </div>
+          <p class="model-note">
+            ※ 全分子数は 40 個、体積 V と温度 T は一定なので、全圧 P = 1.00 atm のまま変わりません。混合比率だけを変えて、分圧がどう分かれるかを見ます。
+          </p>
 
           <div class="insight-box">
             <strong>🎯 分圧比 ＝ 物質量比（モル比）＝ 粒子数の比！</strong>
@@ -1519,23 +1529,36 @@
     const ctxMole = cMole.getContext('2d');
     let particlesMole = [];
 
+    const MOLE_TOTAL_PARTICLES = 40;
+    const MOLE_TOTAL_P = 1.00; // atm
+
     function updateMoleUI() {
       const ratio = parseInt(document.getElementById('slider-mix-ratio').value, 10);
       const pctA = ratio;
       const pctB = 100 - ratio;
       document.getElementById('ctrl-mix-label').textContent = `気体A: ${pctA}% | 気体B: ${pctB}%`;
 
-      const xA = (pctA / 100).toFixed(2);
-      const xB = (pctB / 100).toFixed(2);
-      document.getElementById('mole-xa-val').textContent = xA;
-      document.getElementById('mole-xb-val').textContent = xB;
+      // 全分子数 40 個・全圧 P = 1.00 atm（V・T 一定）
+      const countA = Math.round(MOLE_TOTAL_PARTICLES * (pctA / 100));
+      const countB = MOLE_TOTAL_PARTICLES - countA;
+      const xA = countA / MOLE_TOTAL_PARTICLES;
+      const xB = countB / MOLE_TOTAL_PARTICLES;
+      // 分圧は物質量に比例: pA = P × xA
+      const pA = MOLE_TOTAL_P * xA;
+      const pB = MOLE_TOTAL_P * xB;
+      document.getElementById('mole-xa-val').textContent = xA.toFixed(2);
+      document.getElementById('mole-xb-val').textContent = xB.toFixed(2);
+      document.getElementById('mole-pa-sub').textContent = `分圧 pA = P × xA = ${pA.toFixed(2)} atm`;
+      document.getElementById('mole-pb-sub').textContent = `分圧 pB = P × xB = ${pB.toFixed(2)} atm`;
 
+      // 物質量の比（分子数から）と分圧の比（分圧の値から）を、それぞれ別に約分して並べる
       const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
-      const g = gcd(pctA, pctB) || 1;
-      document.getElementById('mole-ratio-val').textContent = `${pctA/g} : ${pctB/g}`;
-
-      const countA = Math.round(40 * (pctA / 100));
-      const countB = 40 - countA;
+      const simplify = (a, b) => { const g = gcd(a, b) || 1; return `${a / g} : ${b / g}`; };
+      const nRatio = simplify(countA, countB);
+      const pRatio = simplify(Math.round(pA * 1000), Math.round(pB * 1000));
+      document.getElementById('mole-nratio-val').textContent = nRatio;
+      document.getElementById('mole-ratio-val').textContent = pRatio;
+      document.getElementById('mole-match-sub').textContent = (nRatio === pRatio) ? '2つの比が一致！' : '';
       particlesMole = [
         ...spawnParticles('a', countA, 20, 420, 20, 240, 2.2),
         ...spawnParticles('b', countB, 20, 420, 20, 240, 2.2)
