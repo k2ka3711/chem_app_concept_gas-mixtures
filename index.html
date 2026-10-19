@@ -1308,25 +1308,40 @@
 
     function updateVesselParticle(p, v, isOpen) {
       const W = v.canvas.width, H = v.canvas.height;
+      const L = v.leftWall, R = v.rightWall, r = p.radius;
+      const valveX = (L + R) / 2;
+      const prevX = p.x;
       p.x += p.vx;
       p.y += p.vy;
 
       // 外壁
-      if (p.x - p.radius < 10) { p.x = 10 + p.radius; p.vx *= -1; }
-      if (p.x + p.radius > W - 10) { p.x = W - 10 - p.radius; p.vx *= -1; }
-      if (p.y - p.radius < 10) { p.y = 10 + p.radius; p.vy *= -1; }
-      if (p.y + p.radius > H - 10) { p.y = H - 10 - p.radius; p.vy *= -1; }
+      if (p.x - r < 10) { p.x = 10 + r; p.vx *= -1; }
+      if (p.x + r > W - 10) { p.x = W - 10 - r; p.vx *= -1; }
+      if (p.y - r < 10) { p.y = 10 + r; p.vy *= -1; }
+      if (p.y + r > H - 10) { p.y = H - 10 - r; p.vy *= -1; }
 
-      // パイプ部の高さにいるか
+      // 容器の内側の壁: パイプの口の高さ以外は通れない
       const inPipeY = (p.y > v.pipeTop && p.y < v.pipeBottom);
+      if (prevX <= L && p.x + r > L && !inPipeY) {
+        p.x = L - r;
+        p.vx = -Math.abs(p.vx);
+      } else if (prevX >= R && p.x - r < R && !inPipeY) {
+        p.x = R + r;
+        p.vx = Math.abs(p.vx);
+      }
 
-      if (!isOpen || !inPipeY) {
-        if (p.x < v.leftWall && p.x + p.radius >= v.leftWall) {
-          p.x = v.leftWall - p.radius;
-          p.vx *= -1;
-        } else if (p.x > v.rightWall && p.x - p.radius <= v.rightWall) {
-          p.x = v.rightWall + p.radius;
-          p.vx *= -1;
+      // パイプの中: 上下の壁で跳ね返り、コックが閉じていれば弁で跳ね返る
+      if (p.x > L && p.x < R) {
+        if (p.y - r < v.pipeTop) { p.y = v.pipeTop + r; p.vy = Math.abs(p.vy); }
+        if (p.y + r > v.pipeBottom) { p.y = v.pipeBottom - r; p.vy = -Math.abs(p.vy); }
+        if (!isOpen) {
+          if (prevX < valveX && p.x + r > valveX - 4) {
+            p.x = valveX - 4 - r;
+            p.vx = -Math.abs(p.vx);
+          } else if (prevX >= valveX && p.x - r < valveX + 4) {
+            p.x = valveX + 4 + r;
+            p.vx = Math.abs(p.vx);
+          }
         }
       }
     }
