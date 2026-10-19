@@ -462,6 +462,12 @@
     .control-label span.c-a { color: var(--gas-a); }
     .control-label span.c-b { color: var(--gas-b); }
     .control-label span.c-t { color: var(--accent-t); }
+    .model-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.6;
+    }
     input[type="range"] {
       width: 100%;
       height: 6px;
@@ -890,18 +896,21 @@
             <div class="control-item">
               <div class="control-label">
                 <span>気体Aの粒子数 (nA)</span>
-                <span class="c-a" id="ctrl-na-label">30 粒 (0.6 mol)</span>
+                <span class="c-a" id="ctrl-na-label">30 粒 (0.60 mol)</span>
               </div>
               <input type="range" id="slider-na" min="10" max="50" step="5" value="30">
             </div>
             <div class="control-item">
               <div class="control-label">
                 <span>気体Bの粒子数 (nB)</span>
-                <span class="c-b" id="ctrl-nb-label">20 粒 (0.4 mol)</span>
+                <span class="c-b" id="ctrl-nb-label">20 粒 (0.40 mol)</span>
               </div>
               <input type="range" id="slider-nb" min="0" max="50" step="5" value="20">
             </div>
           </div>
+          <p class="model-note">
+            ※ 容器の体積 V と温度 T は一定です。このモデルでは粒子1個を 0.020 mol とみなします。V・T が一定なので分圧は物質量に比例し（p = nRT / V）、この設定では 1.00 mol あたり 1.00 atm です（たとえば 300 K・24.6 L の容器に相当）。
+          </p>
 
           <div class="insight-box">
             <strong>🎯 ドルトンの分圧の法則：全圧は分圧の単純な「和」になる！</strong>
