@@ -1003,7 +1003,7 @@
 
           <div class="insight-box">
             <strong>🎯 入試頻出！コックを開けたときの解き方（きれいに割り切れる！）</strong>
-            コックを開けると、各気体は<strong>「全体の体積（1.0 L + 3.0 L = 4.0 L）」</strong>に向かって自由に広がります。<br>
+            コックを開けて十分に時間がたつと、各気体は<strong>「全体の体積（1.0 L + 3.0 L = 4.0 L）」</strong>に均一に広がります。<br>
             ① ボイルの法則でそれぞれの分圧を求める：<br>
             &nbsp;&nbsp;・気体A：<code>pA = 4.00 atm × (1.0 L / 4.0 L) = 1.00 atm</code><br>
             &nbsp;&nbsp;・気体B：<code>pB = 2.00 atm × (3.0 L / 4.0 L) = 1.50 atm</code><br>
@@ -1615,9 +1615,13 @@
         document.getElementById('cock-ptot-val').textContent = fmtCockP(m.ptot);
         document.getElementById('cock-pa-sub').textContent = `体積 ${fmtCockV(m.Vt)} L に拡散 (${fmtCockP(PA0)} × ${volumeFraction(V1, m.Vt)})`;
         document.getElementById('cock-pb-sub').textContent = `体積 ${fmtCockV(m.Vt)} L に拡散 (${fmtCockP(PB0)} × ${volumeFraction(V2, m.Vt)})`;
-        document.getElementById('cock-ptot-sub').textContent = `全圧 P = ${fmtCockP(m.pa)} + ${fmtCockP(m.pb)} = ${fmtCockP(m.ptot)} atm（きれいに求まります！）`;
+        document.getElementById('cock-ptot-sub').textContent = `十分に時間がたち、全体に均一に混ざると 全圧 P = ${fmtCockP(m.pa)} + ${fmtCockP(m.pb)} = ${fmtCockP(m.ptot)} atm（きれいに求まります！）`;
       } else {
         document.getElementById('btn-cock-toggle').innerHTML = '🚪 コックを開く（混合スタート）';
+        const m = calcCockMixed();
+        document.getElementById('cock-pa-sub').textContent = '十分に混ざった後に閉じれば、どちらの容器でもこの分圧';
+        document.getElementById('cock-pb-sub').textContent = '十分に混ざった後に閉じれば、どちらの容器でもこの分圧';
+        document.getElementById('cock-ptot-sub').textContent = `コックを閉じました。十分に混ざった後に閉じた場合、どちらの容器も全圧 ${fmtCockP(m.ptot)} atm のままです（混ざりきる前に閉じると、容器ごとに値が異なります）`;
       }
     });
     document.getElementById('btn-cock-reset').addEventListener('click', resetCockSim);
