@@ -1777,10 +1777,8 @@
         document.getElementById('temp-n1-sub').textContent = `粒子数: ${targetN1} 個 (${(ratio1 * 100).toFixed(1)}%) [平衡]`;
         document.getElementById('temp-n2-sub').textContent = `粒子数: ${TOTAL_TEMP_PARTICLES - targetN1} 個 (${((1 - ratio1) * 100).toFixed(1)}%) [平衡]`;
 
-        // 粒子の移動を反映
-        if (Math.abs(countLeftParticles() - targetN1) > 2) {
-          initTempParticles(targetN1);
-        }
+        // 粒子はこの目標数に向かってパイプを通って少しずつ移動する（flowTowardTarget）
+        tempTargetN1 = targetN1;
       }
     }
 
@@ -1800,6 +1798,65 @@
       return tempParticles.filter(p => p.x < T_VALVE_X).length;
     }
 
+    /* コックが開いているとき、容器1の粒子数を平衡の目標数に近づける。
+       全粒子を作り直すと瞬間移動に見えるため、多すぎる側でパイプの口に近い粒子を1個ずつ選び、
+       口に向けて進ませて実際にパイプを通って移らせる。
+       （粒子の運動だけに任せると、細い穴を通る分子の性質で n ∝ 1/√T に近づき、
+         高校で扱う P1 = P2 の平衡と合わないため、目標数は状態方程式から決める） */
+    let tempTargetN1 = 15;
+    let tempFlowFrame = 0;
+    const FLOW_INTERVAL = 5;      // 何フレームごとに1個送り出すか
+    const FLOW_TIMEOUT = 240;     // 送り出した粒子の追跡をやめるまでのフレーム数
+
+    function flowTowardTarget() {
+      const v = tempVessel;
+      // 送り出し中の粒子: コックを越えたか、時間切れなら追跡をやめる
+      let pendingToRight = 0, pendingToLeft = 0;
+      tempParticles.forEach(p => {
+        if (!p.flowTo) return;
+        p.flowAge++;
+        const arrived = (p.flowTo === 'right') ? p.x >= T_VALVE_X : p.x < T_VALVE_X;
+        if (arrived || p.flowAge > FLOW_TIMEOUT) { p.flowTo = null; return; }
+        if (p.flowTo === 'right') pendingToRight++; else pendingToLeft++;
+      });
+
+      tempFlowFrame++;
+      if (tempFlowFrame % FLOW_INTERVAL !== 0) return;
+
+      const expectedLeft = countLeftParticles() - pendingToRight + pendingToLeft;
+      const diff = expectedLeft - tempTargetN1;
+      if (diff === 0) return;
+
+      const fromLeft = diff > 0;
+      const mouthX = fromLeft ? T_LEFT_WALL : T_RIGHT_WALL;
+      const pipeMid = (v.pipeTop + v.pipeBottom) / 2;
+      // 口に近く、かつ口を見込む角度が急すぎない（壁に当たらず口に入れる）粒子を優先する
+      let best = null, bestScore = Infinity;
+      tempParticles.forEach(p => {
+        if (p.flowTo) return;
+        const onSide = fromLeft ? p.x <= T_LEFT_WALL : p.x >= T_RIGHT_WALL;
+        if (!onSide) return;
+        const dx = Math.abs(p.x - mouthX), dy = Math.abs(p.y - pipeMid);
+        const score = Math.hypot(dx, dy) + (dy > 2 * dx ? 1000 : 0);
+        if (score < bestScore) { bestScore = score; best = p; }
+      });
+      if (!best) return;
+
+      // パイプの口（高さは中央付近でばらつかせる）に向けて、速さはそのままで向きだけ変える
+      const aimY = pipeMid + (Math.random() - 0.5) * 16;
+      const aimX = mouthX;
+      const spd = Math.hypot(best.vx, best.vy) || 1;
+      const dist = Math.hypot(aimX - best.x, aimY - best.y) || 1;
+      best.vx = (aimX - best.x) / dist * spd;
+      best.vy = (aimY - best.y) / dist * spd;
+      best.flowTo = fromLeft ? 'right' : 'left';
+      best.flowAge = 0;
+    }
+
+    function clearTempFlow() {
+      tempParticles.forEach(p => { p.flowTo = null; });
+    }
+
     function resetTempSim() {
       isTempCockOpen = false;
       document.getElementById('slider-t1').value = 300;
@@ -1815,6 +1872,7 @@
 
     document.getElementById('btn-temp-cock-toggle').addEventListener('click', () => {
       isTempCockOpen = !isTempCockOpen;
+      clearTempFlow();
       if (isTempCockOpen) {
         document.getElementById('btn-temp-cock-toggle').innerHTML = '🔒 コックを閉じる';
       } else {
@@ -1849,6 +1907,7 @@
         [getTempBg(T1), getTempBg(T2)]);
 
       matchTempSpeeds(T1, T2);
+      if (isTempCockOpen) flowTowardTarget();
       tempParticles.forEach(p => {
         updateVesselParticle(p, tempVessel, isTempCockOpen);
         p.draw(tempVessel.ctx, 'both');
